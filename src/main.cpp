@@ -7,6 +7,9 @@
 
 /*
 
+11.10. 13:00 - fialaka1
+    - upravil jsem ty swap -> logiku jsem strcil do swapThem() a ty jednotlive fce jen urci jak
+
 11.10. 12:00 - fialaka1
     - pripadne zmeny jsem zakomentovaval
     - dimension jsem udelal globalni a opravil v getPositionOfSpace
@@ -90,70 +93,40 @@ bool checkCoord(Coord coord) {
     return true;
 }
 
-void swapLeft(int **triangle) {
+// swap* logic
+void swapThem(int **triangle, int add_x, int add_y) {
     Coord coord_space = getPositionOfSpace(triangle, dimension);
     Coord coord_num;
-    coord_num.x = coord_space.x;
-    coord_num.y = coord_space.y - 1;
+    coord_num.x = coord_space.x + add_x;
+    coord_num.y = coord_space.y + add_y;
     
     if (checkCoord(coord_num)) {
         swap(triangle, coord_num, coord_space);
-    }
+    }    
+}
+
+void swapLeft(int **triangle) {
+    swapThem(triangle, 0, -1);
 }
 
 void swapRight(int **triangle) {
-    Coord coord_space = getPositionOfSpace(triangle, dimension);
-    Coord coord_num;
-    coord_num.x = coord_space.x;
-    coord_num.y = coord_space.y + 1;
-    
-    if (checkCoord(coord_num)) {
-        swap(triangle, coord_num, coord_space);
-    }    
+    swapThem(triangle, 0, 1);
 }
 
 void swapUpLeft(int **triangle) {
-    Coord coord_space = getPositionOfSpace(triangle, dimension);
-    Coord coord_num;
-    coord_num.x = coord_space.x - 1;
-    coord_num.y = coord_space.y - 1;
-    
-    if (checkCoord(coord_num)) {
-        swap(triangle, coord_num, coord_space);
-    }    
+    swapThem(triangle, -1, -1);
 }
 
 void swapUpRight(int **triangle) {
-    Coord coord_space = getPositionOfSpace(triangle, dimension);
-    Coord coord_num;
-    coord_num.x = coord_space.x - 1;
-    coord_num.y = coord_space.y;
-    
-    if (checkCoord(coord_num)) {
-        swap(triangle, coord_num, coord_space);
-    }       
+    swapThem(triangle, -1, 0);
 }
 
 void swapDownLeft(int **triangle) {
-    Coord coord_space = getPositionOfSpace(triangle, dimension);
-    Coord coord_num;
-    coord_num.x = coord_space.x + 1;
-    coord_num.y = coord_space.y;
-    
-    if (checkCoord(coord_num)) {
-        swap(triangle, coord_num, coord_space);
-    }       
+    swapThem(triangle, 1, 0);
 }
 
 void swapDownRight(int **triangle) {
-    Coord coord_space = getPositionOfSpace(triangle, dimension);
-    Coord coord_num;
-    coord_num.x = coord_space.x + 1;
-    coord_num.y = coord_space.y + 1;
-    
-    if (checkCoord(coord_num)) {
-        swap(triangle, coord_num, coord_space);
-    }       
+    swapThem(triangle, 1, 1);
 }
 
 void saveResult(int steps, int **triangle) {
