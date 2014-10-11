@@ -5,15 +5,41 @@
 #define SPACE -1
 #define INVALID_POSITION 0
 
+/*
+
+11.10. 12:00 - fialaka1
+    - pripadne zmeny jsem zakomentovaval
+    - dimension jsem udelal globalni a opravil v getPositionOfSpace
+    - swap() -- univerzalni prohozeni prvku
+    - checkCoord() -- kontrola souradnic pohybu
+    - nejak jsem vyprasil ty swap*() -- lisi se jen +/- u souradnice
+    - printTriangle() -- vypise triangle
+    - printTriangleExt() -- vypise a prida popisek
+    - debugSwaps() -- k otestovani pohybu
+    - do mainloop jsem naznacil reseni dale
+
+ */
+
 using namespace std;
 
 
 int maxMoves;
+int dimension;
 
 typedef struct {
     int x;
     int y;
 } Coord;
+
+// print triangle like "triangle"
+void printTriangle(int **triangle) {
+    for (int i=0; i<dimension; i++) {
+        for (int j=0; j<=i; j++) {
+            cout << triangle[i][j] << " ";
+        }
+        cout << endl;
+    }
+}
 
 bool isTriangleSolved(int **triangle) {
     
@@ -22,13 +48,13 @@ bool isTriangleSolved(int **triangle) {
 }
 
 bool canMoves(int moves) {
-    return moves >= maxMoves;
+    return (moves < maxMoves);
 }
 
 Coord getPositionOfSpace(int **triangle, int dimension) {
     Coord coord;
     
-    for (int i=0; i<5; i++) {
+    for (int i=0; i<dimension; i++) {
         for (int j=0; j<=i; j++) {
             if (triangle[i][j] == SPACE) {
                 coord.x = i;
@@ -42,42 +68,170 @@ Coord getPositionOfSpace(int **triangle, int dimension) {
     return coord;
 }
 
+// swap two numbers in triangle
+void swap(int **triangle, Coord num, Coord space) {
+    int tmp = triangle[num.x][num.y];
+    triangle[num.x][num.y] = triangle[space.x][space.y];
+    triangle[space.x][space.y] = tmp;
+}
+
+// check coordinates
+bool checkCoord(Coord coord) {
+    if (coord.x < 0)
+        return false;
+    if (coord.y < 0)
+        return false;
+    if (coord.x < coord.y)
+        return false;
+    if (coord.x >= dimension)
+        return false;
+    if (coord.y >= dimension)
+        return false;
+    return true;
+}
+
 void swapLeft(int **triangle) {
+    Coord coord_space = getPositionOfSpace(triangle, dimension);
+    Coord coord_num;
+    coord_num.x = coord_space.x;
+    coord_num.y = coord_space.y - 1;
     
+    if (checkCoord(coord_num)) {
+        swap(triangle, coord_num, coord_space);
+    }
 }
 
 void swapRight(int **triangle) {
+    Coord coord_space = getPositionOfSpace(triangle, dimension);
+    Coord coord_num;
+    coord_num.x = coord_space.x;
+    coord_num.y = coord_space.y + 1;
     
+    if (checkCoord(coord_num)) {
+        swap(triangle, coord_num, coord_space);
+    }    
 }
 
 void swapUpLeft(int **triangle) {
+    Coord coord_space = getPositionOfSpace(triangle, dimension);
+    Coord coord_num;
+    coord_num.x = coord_space.x - 1;
+    coord_num.y = coord_space.y - 1;
     
+    if (checkCoord(coord_num)) {
+        swap(triangle, coord_num, coord_space);
+    }    
 }
 
 void swapUpRight(int **triangle) {
+    Coord coord_space = getPositionOfSpace(triangle, dimension);
+    Coord coord_num;
+    coord_num.x = coord_space.x - 1;
+    coord_num.y = coord_space.y;
     
+    if (checkCoord(coord_num)) {
+        swap(triangle, coord_num, coord_space);
+    }       
 }
 
 void swapDownLeft(int **triangle) {
+    Coord coord_space = getPositionOfSpace(triangle, dimension);
+    Coord coord_num;
+    coord_num.x = coord_space.x + 1;
+    coord_num.y = coord_space.y;
     
+    if (checkCoord(coord_num)) {
+        swap(triangle, coord_num, coord_space);
+    }       
 }
 
 void swapDownRight(int **triangle) {
+    Coord coord_space = getPositionOfSpace(triangle, dimension);
+    Coord coord_num;
+    coord_num.x = coord_space.x + 1;
+    coord_num.y = coord_space.y + 1;
     
+    if (checkCoord(coord_num)) {
+        swap(triangle, coord_num, coord_space);
+    }       
 }
 
 void saveResult(int steps, int **triangle) {
     
 }
 
-void mainProccesLoop(int **triangle, Coord coord, int dimension) {
+// call printTriangle and add description
+void printTriangleExt(int **triangle, string desc) {
+    cout << "Triangle - " << desc << endl;    
+    printTriangle(triangle);
+    cout << "===== =====" << endl << endl;
+}
+
+// debug swaps
+void debugSwaps(int **triangle) {
+    printTriangleExt(triangle, "vstup");
+    swapLeft(triangle);
+    printTriangleExt(triangle, "left");
+    swapRight(triangle);
+    printTriangleExt(triangle, "right");    
+    swapUpLeft(triangle);
+    printTriangleExt(triangle, "up-left");    
+    swapUpLeft(triangle);
+    printTriangleExt(triangle, "up-left");    
+    swapUpRight(triangle);
+    printTriangleExt(triangle, "up-right");    
+    swapDownRight(triangle);
+    printTriangleExt(triangle, "down-right");    
+    swapDownLeft(triangle);
+    printTriangleExt(triangle, "down-left");    
+}
+
+void mainProccesLoop(int **triangle/*, Coord coord, int dimension*/) {
+    debugSwaps(triangle);
     
+    /* // ZAKOMENTOVANO
+    stack<int**> cstack;
+    cstack.push(triangle); // tohle bude spatne.. potrebujeme znat jeste pocet provedenych kroku.. nejaka struktura ve strukture???
+    
+    while (cstack.size() > 0) {
+        // vezmu jednu konfiguraci
+        triangle = cstack.top();
+        cstack.pop();
+        
+        // debug vypis
+        printTriangle(triangle);
+        
+        if (!canMoves(1)) {
+            cout << "Wrong way" << endl;
+            continue;
+        }
+        if (isTriangleSolved(triangle)) {
+            // mame jedno reseni
+            cout << "Result!" << endl;
+            saveResult(1,triangle);
+            continue;
+        }
+        
+        // !!! tady asi budeme muset udelat hardcopy toho trojuhelniku a udelat na nem tah a ulozit.. to vse 6x pro kazdy tah !!!
+        // nebo muzeme mit jen jeden trojuhelnik a na zasobnik ukladat pole kroku (0 je left, 1 je right, ...)
+        // a to pole bude mit max velikost dimension^2 ... dalsi krok by pak byl ==> vezmi pocatek -> proved rekonstrukci konfigurace -> proved tah -> uloz tahy
+        
+        
+        //copy(&triangle[0][0], &triangle[0][0]+dimension*dimension,&new_tr[0][0]);
+        
+        //swapLeft(new_tr);
+        //printTriangleExt(triangle, "puvodni");
+        //printTriangleExt(new_tr, "novy");
+        //cstack.push(new_tr);
+    }*/
 }
 
 
 int main () {
     int **triangle = NULL;
-    int dimension = 5;
+    
+    dimension = 5;
+    maxMoves = dimension * dimension;
     
     stack<int> sampleStack;
     
@@ -116,9 +270,9 @@ int main () {
     triangle[4][3] = 11;
     triangle[4][4] = 13;
 
-    Coord coord = getPositionOfSpace(triangle, dimension);
+    //Coord coord = getPositionOfSpace(triangle, dimension);
 
-    mainProccesLoop (triangle, coord, dimension);
+    mainProccesLoop (triangle/*, coord, dimension*/);
     
     
     // Clean up
