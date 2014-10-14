@@ -5,6 +5,17 @@
 #define SPACE -1
 #define INVALID_POSITION 0
 
+#define TRIANGLE_SOLVED 200
+#define INVALID_STEP 400
+#define TRIANGLE_NOT_SOLVED 201
+
+#define TOP_LEFT '1'
+#define TOP_RIGHT '2'
+#define RIGHT '3'
+#define LEFT '4'
+#define DOWN_LEFT '5'
+#define DOWN_RIGHT '6'
+
 /*
 
 11.10. 13:00 - fialaka1
@@ -34,6 +45,11 @@ typedef struct {
     int y;
 } Coord;
 
+typedef struct {
+    int movesCount;
+    char * moves;
+} Configuration;
+
 // print triangle like "triangle"
 void printTriangle(int **triangle) {
     for (int i=0; i<dimension; i++) {
@@ -44,10 +60,31 @@ void printTriangle(int **triangle) {
     }
 }
 
-bool isTriangleSolved(int **triangle) {
+void reconstruction (int **triangle);
+
+
+int isTriangleSolved(int **triangle) {
     
     
     return false;
+}
+
+int checkTriangleStatus(Configutarion configutarion) {
+    
+    // Reconstruction of triangle
+    int ** copyOfOriginalTriangle;
+    
+    bool isRecostructionDone = reconstruction(copyOfOriginalTriangle);
+    
+    if (!isRecostructionDone) {
+        return INVALID_STEP;
+    }
+    
+    if (isTriangleSolved()) {
+        return TRIANGLE_SOLVED
+    }
+    
+    return TRIANGLE_NOT_SOLVED;
 }
 
 bool canMoves(int moves) {
@@ -94,7 +131,7 @@ bool checkCoord(Coord coord) {
 }
 
 // swap* logic
-void swapThem(int **triangle, int add_x, int add_y) {
+bool swapThem(int **triangle, int add_x, int add_y) {
     Coord coord_space = getPositionOfSpace(triangle, dimension);
     Coord coord_num;
     coord_num.x = coord_space.x + add_x;
@@ -102,7 +139,10 @@ void swapThem(int **triangle, int add_x, int add_y) {
     
     if (checkCoord(coord_num)) {
         swap(triangle, coord_num, coord_space);
-    }    
+        return true;
+    } else {
+        return false;
+    }
 }
 
 void swapLeft(int **triangle) {
@@ -162,41 +202,45 @@ void debugSwaps(int **triangle) {
 void mainProccesLoop(int **triangle/*, Coord coord, int dimension*/) {
     debugSwaps(triangle);
     
-    /* // ZAKOMENTOVANO
-    stack<int**> cstack;
-    cstack.push(triangle); // tohle bude spatne.. potrebujeme znat jeste pocet provedenych kroku.. nejaka struktura ve strukture???
+    stack<Configuration> cstack;
+    
+    Configuration firstConfiguration;
+    cstack.push(firstConfiguration);
     
     while (cstack.size() > 0) {
-        // vezmu jednu konfiguraci
-        triangle = cstack.top();
+        // get configuration from stack
+        Configutarion triangle = cstack.top();
         cstack.pop();
         
         // debug vypis
         printTriangle(triangle);
         
-        if (!canMoves(1)) {
+        if (!canMoves(triangle.movesCount)) {
             cout << "Wrong way" << endl;
             continue;
         }
-        if (isTriangleSolved(triangle)) {
-            // mame jedno reseni
+        
+        // isSolved?
+        int triangleStatus = checkTriangleStatus(triangle);
+        
+        if (triangleStatus == TRIANGLE_SOLVED) {
             cout << "Result!" << endl;
-            saveResult(1,triangle);
+            saveResult(1, triangle);
+            continue;
+        } else if (triangleStatus == INVALID_STEP) {
             continue;
         }
         
-        // !!! tady asi budeme muset udelat hardcopy toho trojuhelniku a udelat na nem tah a ulozit.. to vse 6x pro kazdy tah !!!
-        // nebo muzeme mit jen jeden trojuhelnik a na zasobnik ukladat pole kroku (0 je left, 1 je right, ...)
-        // a to pole bude mit max velikost dimension^2 ... dalsi krok by pak byl ==> vezmi pocatek -> proved rekonstrukci konfigurace -> proved tah -> uloz tahy
+        // create 6 other configurations and save to stack and 6 swaps
+        Configuration configutarion;
+        configutarion.movesCount = triangle.movesCount + 1;
+        configutarion.moves = new char[configutarion.movesCount];
         
-        
-        //copy(&triangle[0][0], &triangle[0][0]+dimension*dimension,&new_tr[0][0]);
-        
-        //swapLeft(new_tr);
-        //printTriangleExt(triangle, "puvodni");
-        //printTriangleExt(new_tr, "novy");
-        //cstack.push(new_tr);
-    }*/
+
+        // delete configuration
+        // Odalokovat pamet
+        delete triangle.moves;
+    }
 }
 
 
