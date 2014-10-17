@@ -1,5 +1,7 @@
 #include <iostream>
 #include <stack>
+#include <cstring> // memcpy
+#include <cstdio>
 
 
 #define SPACE -1
@@ -9,14 +11,22 @@
 #define INVALID_STEP 400
 #define TRIANGLE_NOT_SOLVED 201
 
-#define TOP_LEFT '1'
-#define TOP_RIGHT '2'
-#define RIGHT '3'
+#define TOP_LEFT '7'
+#define TOP_RIGHT '9'
+#define RIGHT '6'
 #define LEFT '4'
-#define DOWN_LEFT '5'
-#define DOWN_RIGHT '6'
+#define DOWN_LEFT '1'
+#define DOWN_RIGHT '3'
 
 /*
+
+17.10. 17:00 - fialaka1
+    - zmen je hodne... dost jsem to prekopal a cca to funguje
+    - nepada to na segfault... primitivni a hotovy priklady to resi dobre...
+    - ale tenhle co tam ted je, tak pise 8 tahu a ja ho z hlavy dam za 4.. takze nekde je jeste chyba
+    - ten triangle dimenze 5 chvili bezel a pak dosla pamet :-D
+
+    
 
 11.10. 13:00 - fialaka1
     - upravil jsem ty swap -> logiku jsem strcil do swapThem() a ty jednotlive fce jen urci jak
@@ -39,6 +49,9 @@ using namespace std;
 
 int maxMoves;
 int dimension;
+int **triangle = NULL;
+int result;
+int results_num;
 
 typedef struct {
     int x;
@@ -60,35 +73,11 @@ void printTriangle(int **triangle) {
     }
 }
 
-void reconstruction (int **triangle);
-
-
-int isTriangleSolved(int **triangle) {
-    
-    
-    return false;
-}
-
-int checkTriangleStatus(Configutarion configutarion) {
-    
-    // Reconstruction of triangle
-    int ** copyOfOriginalTriangle;
-    
-    bool isRecostructionDone = reconstruction(copyOfOriginalTriangle);
-    
-    if (!isRecostructionDone) {
-        return INVALID_STEP;
+void cleanUp(int **triangle) {
+    for (int i=0; i<dimension; i++) {
+        delete triangle[i];
     }
-    
-    if (isTriangleSolved()) {
-        return TRIANGLE_SOLVED
-    }
-    
-    return TRIANGLE_NOT_SOLVED;
-}
-
-bool canMoves(int moves) {
-    return (moves < maxMoves);
+    delete triangle;
 }
 
 Coord getPositionOfSpace(int **triangle, int dimension) {
@@ -145,32 +134,125 @@ bool swapThem(int **triangle, int add_x, int add_y) {
     }
 }
 
-void swapLeft(int **triangle) {
-    swapThem(triangle, 0, -1);
+bool swapLeft(int **triangle) {
+    return swapThem(triangle, 0, -1);
 }
 
-void swapRight(int **triangle) {
-    swapThem(triangle, 0, 1);
+bool swapRight(int **triangle) {
+    return swapThem(triangle, 0, 1);
 }
 
-void swapUpLeft(int **triangle) {
-    swapThem(triangle, -1, -1);
+bool swapUpLeft(int **triangle) {
+    return swapThem(triangle, -1, -1);
 }
 
-void swapUpRight(int **triangle) {
-    swapThem(triangle, -1, 0);
+bool swapUpRight(int **triangle) {
+    return swapThem(triangle, -1, 0);
 }
 
-void swapDownLeft(int **triangle) {
-    swapThem(triangle, 1, 0);
+bool swapDownLeft(int **triangle) {
+    return swapThem(triangle, 1, 0);
 }
 
-void swapDownRight(int **triangle) {
-    swapThem(triangle, 1, 1);
+bool swapDownRight(int **triangle) {
+    return swapThem(triangle, 1, 1);
 }
 
 void saveResult(int steps, int **triangle) {
+    //cout << "Result: " << steps << endl;
+    if (steps < result)
+        result = steps;
+    results_num++;
+}
+
+bool reconstruction (int **copyOfOriginalTriangle, Configuration configuration) {
     
+    bool result = true;
+    
+//     printTriangle(copyOfOriginalTriangle);
+//     for (int x = 0; x < configuration.movesCount; x++)
+//         cout << configuration.moves[x] << " ";
+//     cout << endl << endl;
+
+    
+    for (int i=0; i < configuration.movesCount; i++) {
+        // rozhodne o kroku
+        if (configuration.moves[i] == TOP_LEFT)
+            result = swapUpLeft(copyOfOriginalTriangle);
+        
+        else if (configuration.moves[i] == TOP_RIGHT)
+            result = swapUpRight(copyOfOriginalTriangle);
+        
+        else if (configuration.moves[i] == RIGHT)
+            result = swapRight(copyOfOriginalTriangle);
+        
+        else if (configuration.moves[i] == LEFT)
+            result = swapLeft(copyOfOriginalTriangle);
+        
+        else if (configuration.moves[i] == DOWN_LEFT)
+            result = swapDownLeft(copyOfOriginalTriangle);
+        
+        else if (configuration.moves[i] == DOWN_RIGHT)
+            result = swapDownRight(copyOfOriginalTriangle);
+        
+        // check every step
+        if (!result)
+            return false;
+    }        
+    
+    return true;    
+}
+
+bool isTriangleSolved(int **triangle) {
+    
+    // quick check
+    if (triangle[0][0] != SPACE)
+        return false;
+    
+    // full check
+    int num = 1;
+    for (int x = 1; x < dimension; x++) {
+        for (int y = 0; y <= x; y++) {
+                if (triangle[x][y] != num)
+                    return false;
+                num++;
+        }
+    }    
+    return true;
+}
+
+int checkTriangleStatus(Configuration configuration) {
+    
+    // Reconstruction of triangle
+    int ** copyOfOriginalTriangle;
+    
+    // hardcopy
+    copyOfOriginalTriangle = new int*[dimension];
+    for (int x = 0; x < dimension; x++) {
+        copyOfOriginalTriangle[x] = new int[x+1];
+        for (int y = 0; y <= x; y++) {
+            copyOfOriginalTriangle[x][y] = triangle[x][y];
+        }        
+    }
+    
+    bool isRecostructionDone = reconstruction(copyOfOriginalTriangle, configuration);
+    
+    if (!isRecostructionDone) {
+        cleanUp(copyOfOriginalTriangle);
+        return INVALID_STEP;
+    }
+    
+    if (isTriangleSolved(copyOfOriginalTriangle)) {
+        cleanUp(copyOfOriginalTriangle);
+        return TRIANGLE_SOLVED;
+    }
+    
+    cleanUp(copyOfOriginalTriangle);
+    return TRIANGLE_NOT_SOLVED;
+}
+
+bool canMoves(int moves) {
+    return (moves < maxMoves);
 }
 
 // call printTriangle and add description
@@ -199,69 +281,85 @@ void debugSwaps(int **triangle) {
     printTriangleExt(triangle, "down-left");    
 }
 
-void mainProccesLoop(int **triangle/*, Coord coord, int dimension*/) {
-    debugSwaps(triangle);
+Configuration createConfiguration(Configuration configuration, char value) {
+    Configuration newconfig;
+    newconfig.movesCount = configuration.movesCount + 1;
+    newconfig.moves = new char[newconfig.movesCount];
+    for (int i = 0; i < configuration.movesCount; i++) {
+        newconfig.moves[i] = configuration.moves[i];
+    }
+    newconfig.moves[newconfig.movesCount-1] = value;
+    return newconfig;
+}
+
+void mainProccesLoop() {
+    //debugSwaps(triangle);
     
     stack<Configuration> cstack;
     
     Configuration firstConfiguration;
+    firstConfiguration.movesCount = 0;
     cstack.push(firstConfiguration);
+    int programSteps = 0;
     
     while (cstack.size() > 0) {
+        programSteps++;
         // get configuration from stack
-        Configutarion triangle = cstack.top();
+        Configuration configuration = cstack.top();
         cstack.pop();
+            //cout << "still ok 1 !" << endl;
+
+        //cout << "Step " << programSteps << " stack size " << cstack.size() << " results " << results_num << " best " << result << endl;
+        if ((programSteps % 10000) == 0)
+            cout << "Step " << programSteps << " stack size " << cstack.size() << " results " << results_num << " best " << result << endl;
         
-        // debug vypis
-        printTriangle(triangle);
-        
-        if (!canMoves(triangle.movesCount)) {
-            cout << "Wrong way" << endl;
+        if (!canMoves(configuration.movesCount)) {
+            //cout << "Wrong way" << endl;
             continue;
         }
         
         // isSolved?
-        int triangleStatus = checkTriangleStatus(triangle);
-        
+        int triangleStatus = checkTriangleStatus(configuration);
+            //cout << "still ok 2 !" << endl;
         if (triangleStatus == TRIANGLE_SOLVED) {
-            cout << "Result!" << endl;
-            saveResult(1, triangle);
+            //cout << "Result!" << endl;
+            saveResult(configuration.movesCount, triangle);
             continue;
         } else if (triangleStatus == INVALID_STEP) {
+            //cout << "Invalid step" << endl;
             continue;
         }
-        
         // create 6 other configurations and save to stack and 6 swaps
-        Configuration configutarion;
-        configutarion.movesCount = triangle.movesCount + 1;
-        configutarion.moves = new char[configutarion.movesCount];
         
-
+        cstack.push(createConfiguration(configuration, TOP_LEFT));        
+        cstack.push(createConfiguration(configuration, TOP_RIGHT));
+        cstack.push(createConfiguration(configuration, LEFT));
+        cstack.push(createConfiguration(configuration, RIGHT));
+        cstack.push(createConfiguration(configuration, DOWN_LEFT));
+        cstack.push(createConfiguration(configuration, DOWN_RIGHT));
+        
+            //cout << "still ok 5 !" << endl;
+            
+        /*
+         * !!!!! NEODKOMENTAVAVAT !!!!! ten stack pak ztrati konfiguraci
+         * */
+            
         // delete configuration
         // Odalokovat pamet
-        delete triangle.moves;
+        //delete newconfig.moves;
+            //cout << "still ok 6 !" << endl;
+        //delete configuration.moves;
+            //cout << "still ok 7 !" << endl;
+        //cout << endl;
     }
+    cout << endl << endl << "Pocet reseni: " << results_num << endl << "Nejlepsi reseni je: " << result << endl << endl;
 }
 
-
-int main () {
-    int **triangle = NULL;
-    
+void loadSampleData() {
     dimension = 5;
     maxMoves = dimension * dimension;
-    
-    stack<int> sampleStack;
-    
-    sampleStack.push(9);
-    sampleStack.push(10);
-    sampleStack.push(8);
-    
-    for (int i=0; i<sampleStack.size(); i++) {
-        cout << sampleStack.top() << endl;
-        sampleStack.pop();
-    }
-    
-    
+    result = maxMoves;
+    results_num = 0;
     
     triangle = new int*[dimension];
     
@@ -286,17 +384,37 @@ int main () {
     triangle[4][2] = 7;
     triangle[4][3] = 11;
     triangle[4][4] = 13;
+}
 
-    //Coord coord = getPositionOfSpace(triangle, dimension);
+void loadSampleDataSmall() {
+    dimension = 3;
+    maxMoves = dimension * dimension;
+    result = maxMoves;
+    results_num = 0;
+    
+    triangle = new int*[dimension];
+    
+    triangle[0] = new int[1];
+    triangle[1] = new int[2];
+    triangle[2] = new int[3];
+    
+    triangle[0][0] = 1;
+    triangle[1][0] = 5;
+    triangle[1][1] = 2;
+    triangle[2][0] = 3;
+    triangle[2][1] = 4;
+    triangle[2][2] = SPACE;
+}
 
-    mainProccesLoop (triangle/*, coord, dimension*/);
+int main () {
     
+    //loadSampleData();
     
-    // Clean up
-    for (int i=0; i<dimension; i++) {
-        delete triangle[i];
-    }
-    delete triangle;
+    loadSampleDataSmall();
+
+    mainProccesLoop();
+
+    cleanUp(triangle);
     
     return 0;
 }
