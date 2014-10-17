@@ -23,8 +23,6 @@
 17.10. 17:00 - fialaka1
     - zmen je hodne... dost jsem to prekopal a cca to funguje
     - nepada to na segfault... primitivni a hotovy priklady to resi dobre...
-    - ale tenhle co tam ted je, tak pise 8 tahu a ja ho z hlavy dam za 4.. takze nekde je jeste chyba
-    - ten triangle dimenze 5 chvili bezel a pak dosla pamet :-D
 
     
 
@@ -348,10 +346,11 @@ void mainProccesLoop() {
         // Odalokovat pamet
         //delete newconfig.moves;
             //cout << "still ok 6 !" << endl;
-        //delete configuration.moves;
+        delete configuration.moves;
             //cout << "still ok 7 !" << endl;
         //cout << endl;
     }
+    cout << "Step " << programSteps << " stack size " << cstack.size() << " results " << results_num << " best " << result << endl;
     cout << endl << endl << "Pocet reseni: " << results_num << endl << "Nejlepsi reseni je: " << result << endl << endl;
 }
 
@@ -399,11 +398,11 @@ void loadSampleDataSmall() {
     triangle[2] = new int[3];
     
     triangle[0][0] = 1;
-    triangle[1][0] = 5;
+    triangle[1][0] = 3;
     triangle[1][1] = 2;
-    triangle[2][0] = 3;
+    triangle[2][0] = SPACE;
     triangle[2][1] = 4;
-    triangle[2][2] = SPACE;
+    triangle[2][2] = 5;
 }
 
 int main () {
