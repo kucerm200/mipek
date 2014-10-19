@@ -20,6 +20,10 @@
 
 /*
 
+19.10. 15:30 - fialaka1
+    - tak asi to funguje dobre, ale nekde to dela sileny leaky
+    - velikost zasobniku se relativne ustali
+
 17.10. 17:00 - fialaka1
     - zmen je hodne... dost jsem to prekopal a cca to funguje
     - nepada to na segfault... primitivni a hotovy priklady to resi dobre...
@@ -339,7 +343,7 @@ void mainProccesLoop() {
             //cout << "still ok 5 !" << endl;
             
         /*
-         * !!!!! NEODKOMENTAVAVAT !!!!! ten stack pak ztrati konfiguraci
+         * 
          * */
             
         // delete configuration
