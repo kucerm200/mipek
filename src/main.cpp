@@ -283,57 +283,69 @@ void debugSwaps(int **triangle) {
     printTriangleExt(triangle, "down-left");    
 }
 
-Configuration createConfiguration(Configuration configuration, char value) {
-    Configuration newconfig;
-    newconfig.movesCount = configuration.movesCount + 1;
-    newconfig.moves = new char[newconfig.movesCount];
-    for (int i = 0; i < configuration.movesCount; i++) {
-        newconfig.moves[i] = configuration.moves[i];
+Configuration * createConfiguration(Configuration * configuration, char value) {
+    Configuration * newconfig;
+    newconfig = new Configuration;
+    newconfig->movesCount = configuration->movesCount + 1;
+    newconfig->moves = new char[newconfig->movesCount];
+    for (int i = 0; i < configuration->movesCount; i++) {
+        newconfig->moves[i] = configuration->moves[i];
     }
-    newconfig.moves[newconfig.movesCount-1] = value;
+    newconfig->moves[newconfig->movesCount-1] = value;
     return newconfig;
 }
 
 void mainProccesLoop() {
     //debugSwaps(triangle);
     
-    stack<Configuration> cstack;
+    stack<Configuration *> cstack;
     
-    Configuration firstConfiguration;
-    firstConfiguration.movesCount = 0;
+    Configuration * firstConfiguration;
+    firstConfiguration = new Configuration;
+    firstConfiguration->movesCount = 0;
+    firstConfiguration->moves = new char[0];
     cstack.push(firstConfiguration);
     int programSteps = 0;
     
     while (cstack.size() > 0) {
         programSteps++;
         // get configuration from stack
-        Configuration configuration = cstack.top();
+        Configuration * configuration = NULL;
+        configuration = cstack.top();
         cstack.pop();
             //cout << "still ok 1 !" << endl;
 
         //cout << "Step " << programSteps << " stack size " << cstack.size() << " results " << results_num << " best " << result << endl;
-        if ((programSteps % 10000) == 0)
+        if ((programSteps % 1000000) == 0)
             cout << "Step " << programSteps << " stack size " << cstack.size() << " results " << results_num << " best " << result << endl;
         
-        if (!canMoves(configuration.movesCount)) {
+        if (!canMoves(configuration->movesCount)) {
             //cout << "Wrong way" << endl;
+            delete configuration->moves;
+            delete configuration;
             continue;
         }
         
         // isSolved?
-        int triangleStatus = checkTriangleStatus(configuration);
+            //cout << "still ok 1 !" << endl;
+        int triangleStatus = checkTriangleStatus(*configuration);
             //cout << "still ok 2 !" << endl;
         if (triangleStatus == TRIANGLE_SOLVED) {
             //cout << "Result!" << endl;
-            saveResult(configuration.movesCount, triangle);
+            saveResult(configuration->movesCount, triangle);
+            delete configuration->moves;
+            delete configuration;
             continue;
         } else if (triangleStatus == INVALID_STEP) {
             //cout << "Invalid step" << endl;
+            delete configuration->moves;
+            delete configuration;
             continue;
         }
         // create 6 other configurations and save to stack and 6 swaps
         
         cstack.push(createConfiguration(configuration, TOP_LEFT));        
+            //cout << "still ok 2 !" << endl;
         cstack.push(createConfiguration(configuration, TOP_RIGHT));
         cstack.push(createConfiguration(configuration, LEFT));
         cstack.push(createConfiguration(configuration, RIGHT));
@@ -350,7 +362,8 @@ void mainProccesLoop() {
         // Odalokovat pamet
         //delete newconfig.moves;
             //cout << "still ok 6 !" << endl;
-        delete configuration.moves;
+        delete configuration->moves;
+        delete configuration;
             //cout << "still ok 7 !" << endl;
         //cout << endl;
     }
@@ -411,9 +424,9 @@ void loadSampleDataSmall() {
 
 int main () {
     
-    //loadSampleData();
+    loadSampleData();
     
-    loadSampleDataSmall();
+    //loadSampleDataSmall();
 
     mainProccesLoop();
 
