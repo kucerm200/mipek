@@ -255,7 +255,7 @@ int checkTriangleStatus(Configuration configuration) {
 }
 
 bool canMoves(int moves) {
-    return (moves < maxMoves);
+    return (moves < result);
 }
 
 // call printTriangle and add description
@@ -327,7 +327,7 @@ void mainProccesLoop() {
             //cout << "still ok 1 !" << endl;
 
         //cout << "Step " << programSteps << " stack size " << cstack.size() << " results " << results_num << " best " << result << endl;
-        if ((programSteps % 1000000) == 0)
+        if ((programSteps % 1000) == 0)
             cout << "Step " << programSteps << " stack size " << cstack.size() << " results " << results_num << " best " << result << endl;
         
         if (!canMoves(configuration->movesCount)) {
@@ -433,9 +433,36 @@ void loadSampleDataSmall() {
     triangle[2][2] = 5;
 }
 
+void loadSampleData4() {
+    dimension = 4;
+    maxMoves = dimension * dimension;
+    result = maxMoves;
+    results_num = 0;
+    
+    triangle = new int*[dimension];
+    
+    triangle[0] = new int[1];
+    triangle[1] = new int[2];
+    triangle[2] = new int[3];
+    triangle[3] = new int[4];
+    
+    triangle[0][0] = 1;
+    triangle[1][0] = 3;
+    triangle[1][1] = 2;
+    triangle[2][0] = SPACE;
+    triangle[2][1] = 4;
+    triangle[2][2] = 5;
+    triangle[3][0] = 6;
+    triangle[3][1] = 7;
+    triangle[3][2] = 8;
+    triangle[3][3] = 9;
+}
+
 int main () {
     
-    loadSampleData();
+    //loadSampleData();
+    
+    loadSampleData4();
     
     //loadSampleDataSmall();
 
