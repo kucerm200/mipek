@@ -327,7 +327,7 @@ void mainProccesLoop() {
             //cout << "still ok 1 !" << endl;
 
         //cout << "Step " << programSteps << " stack size " << cstack.size() << " results " << results_num << " best " << result << endl;
-        if ((programSteps % 1000) == 0)
+        if ((programSteps % 1000000) == 0)
             cout << "Step " << programSteps << " stack size " << cstack.size() << " results " << results_num << " best " << result << endl;
         
         if (!canMoves(configuration->movesCount)) {
@@ -355,13 +355,23 @@ void mainProccesLoop() {
         }
         // create 6 other configurations and save to stack and 6 swaps
         
-        cstack.push(createConfiguration(configuration, TOP_LEFT));        
-            //cout << "still ok 2 !" << endl;
-        cstack.push(createConfiguration(configuration, TOP_RIGHT));
-        cstack.push(createConfiguration(configuration, LEFT));
-        cstack.push(createConfiguration(configuration, RIGHT));
-        cstack.push(createConfiguration(configuration, DOWN_LEFT));
-        cstack.push(createConfiguration(configuration, DOWN_RIGHT));
+        if (configuration->moves[configuration->movesCount - 1] != TOP_RIGHT)
+            cstack.push(createConfiguration(configuration, DOWN_LEFT));
+        
+        if (configuration->moves[configuration->movesCount - 1] != TOP_LEFT)
+            cstack.push(createConfiguration(configuration, DOWN_RIGHT));
+        
+        if (configuration->moves[configuration->movesCount - 1] != RIGHT)
+            cstack.push(createConfiguration(configuration, LEFT));
+        
+        if (configuration->moves[configuration->movesCount - 1] != LEFT)
+            cstack.push(createConfiguration(configuration, RIGHT));
+        
+        if (configuration->moves[configuration->movesCount - 1] != DOWN_RIGHT)
+            cstack.push(createConfiguration(configuration, TOP_LEFT));        
+        
+        if (configuration->moves[configuration->movesCount - 1] != DOWN_LEFT)
+            cstack.push(createConfiguration(configuration, TOP_RIGHT));
         
             //cout << "still ok 5 !" << endl;
             
@@ -400,17 +410,17 @@ void loadSampleData() {
     triangle[1][0] = 5;
     triangle[1][1] = 1;
     triangle[2][0] = 8;
-    triangle[2][1] = 10;
+    triangle[2][1] = 3;
     triangle[2][2] = 9;
     triangle[3][0] = 6;
     triangle[3][1] = SPACE;
-    triangle[3][2] = 14;
-    triangle[3][3] = 12;
-    triangle[4][0] = 3;
-    triangle[4][1] = 2;
-    triangle[4][2] = 7;
-    triangle[4][3] = 11;
-    triangle[4][4] = 13;
+    triangle[3][2] = 2;
+    triangle[3][3] = 7;
+    triangle[4][0] = 10;
+    triangle[4][1] = 11;
+    triangle[4][2] = 12;
+    triangle[4][3] = 13;
+    triangle[4][4] = 14;
 }
 
 void loadSampleDataSmall() {
@@ -449,20 +459,20 @@ void loadSampleData4() {
     triangle[0][0] = 1;
     triangle[1][0] = 3;
     triangle[1][1] = 2;
-    triangle[2][0] = SPACE;
+    triangle[2][0] = 8;
     triangle[2][1] = 4;
     triangle[2][2] = 5;
     triangle[3][0] = 6;
     triangle[3][1] = 7;
-    triangle[3][2] = 8;
+    triangle[3][2] = SPACE;
     triangle[3][3] = 9;
 }
 
 int main () {
     
-    //loadSampleData();
+    loadSampleData();
     
-    loadSampleData4();
+    //loadSampleData4();
     
     //loadSampleDataSmall();
 
