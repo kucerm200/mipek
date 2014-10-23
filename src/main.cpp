@@ -51,9 +51,10 @@ using namespace std;
 
 int maxMoves;
 int dimension;
-int **triangle = NULL;
+int ** triangle = NULL;
 int result;
 int results_num;
+int ** copyOfOriginalTriangle = NULL;
 
 typedef struct {
     int x;
@@ -226,30 +227,30 @@ bool isTriangleSolved(int **triangle) {
 int checkTriangleStatus(Configuration configuration) {
     
     // Reconstruction of triangle
-    int ** copyOfOriginalTriangle;
+    //int ** copyOfOriginalTriangle;
     
     // hardcopy
-    copyOfOriginalTriangle = new int*[dimension];
+    //copyOfOriginalTriangle = new int*[dimension];
     for (int x = 0; x < dimension; x++) {
-        copyOfOriginalTriangle[x] = new int[x+1];
+        //copyOfOriginalTriangle[x] = new int[x+1];
         for (int y = 0; y <= x; y++) {
             copyOfOriginalTriangle[x][y] = triangle[x][y];
-        }        
+        }
     }
     
     bool isRecostructionDone = reconstruction(copyOfOriginalTriangle, configuration);
     
     if (!isRecostructionDone) {
-        cleanUp(copyOfOriginalTriangle);
+        //cleanUp(copyOfOriginalTriangle);
         return INVALID_STEP;
     }
     
     if (isTriangleSolved(copyOfOriginalTriangle)) {
-        cleanUp(copyOfOriginalTriangle);
+        //cleanUp(copyOfOriginalTriangle);
         return TRIANGLE_SOLVED;
     }
     
-    cleanUp(copyOfOriginalTriangle);
+    //cleanUp(copyOfOriginalTriangle);
     return TRIANGLE_NOT_SOLVED;
 }
 
@@ -288,9 +289,11 @@ Configuration * createConfiguration(Configuration * configuration, char value) {
     newconfig = new Configuration;
     newconfig->movesCount = configuration->movesCount + 1;
     newconfig->moves = new char[newconfig->movesCount];
-    for (int i = 0; i < configuration->movesCount; i++) {
+    // tady je copy lehce rychlejsi nez to delat pres cyklus
+    copy(configuration->moves, configuration->moves + configuration->movesCount, newconfig->moves);
+    /*for (int i = 0; i < configuration->movesCount; i++) {
         newconfig->moves[i] = configuration->moves[i];
-    }
+    }*/
     newconfig->moves[newconfig->movesCount-1] = value;
     return newconfig;
 }
@@ -306,6 +309,14 @@ void mainProccesLoop() {
     firstConfiguration->moves = new char[0];
     cstack.push(firstConfiguration);
     int programSteps = 0;
+    
+    // pripravim jednu kopii trojuhelniku
+    // priste uz se jen prehraje datama (usetri se alokace a dealokace pameti
+    copyOfOriginalTriangle = new int*[dimension];
+    for (int x = 0; x < dimension; x++) {
+        copyOfOriginalTriangle[x] = new int[x+1];        
+    }
+    
     
     while (cstack.size() > 0) {
         programSteps++;
