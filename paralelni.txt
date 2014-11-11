@@ -1,0 +1,125 @@
+spusti se procesy
+mpi procesy 1+ cekaji na defaultni hodnoty (blokujici receive broadcastu)
+mpi process 0 nacte data ze souboru a pripravi prostredi
+mpi process 0 broadcastem posle vsem defaultni hodnoty (triangle, dimenze, atd)
+mpi procesy 1+ cekaji na data (blokujici receive)
+mpi process 0 spusti vypocet tak ze ulozi prvni stav na zasobnik a provede jeho expanzi (v navodu je -> tolik expanzi abych mohl obeslat vsechny, to ale jich nesmi byt moc)
+mpi process 0 rozesle procesum 1+ stavy
+mpi procesy 1+ zacnou pracovat
+mpi procesy 0 zacne pracovat
+// co kdyz mame vice procesu nez bude stavu z prvni expanze (5+)
+kdyz proces nalezne lepsi reseni, posle ho broadcastem
+v kazde xy-te iteraci si neblokujicim ctenim broadcastu prectu lepsi reseni
+
+mpi process 0 pocka az nikdo nema vypocet
+mpi process 0 ukonci vypocet
+
+
+
+
+
+
+/*** master ***/
+
+main () {
+    
+    double t1, t2;
+    
+    MPI_Barrier (); /* cekam na spusteni vsech procesu */
+    
+    t1=MPI_Wtime (); /* pocatecni cas */
+    
+    MPI_Send (); /* rozesilam data */
+    
+    /* ... vlastni vypocet .... */
+    
+    MPI_Recv (); /* prijimam data zpet */
+    
+    MPI_Barrier (); /* cekam na dokonceni vypoctu */
+    
+    t2=MPI_Wtime(); /* koncovy cas */
+    
+    printf ("Spotrebovany cas je %f.\n",t2-t1);
+    
+    MPI_Finalize ();
+    
+    return (0);
+
+}
+
+/*** slave ***/
+
+main () {
+    
+    MPI_Barrier (); /* data jsem dostal */
+    
+    MPI_Recv (); /* prijimam data od mastera */
+    
+    /* ... vlastni vypocet .... */
+    
+    MPI_Send (); /* posilama data zpet masterovi */
+    
+    MPI_Barrier (); /* vypocet hotov */
+    
+    MPI_Finalize ();
+    
+    return (0);
+
+}
+
+
+
+
+
+
+#define CHECK_MSG_AMOUNT  100
+
+#define MSG_WORK_REQUEST 1000
+#define MSG_WORK_SENT    1001
+#define MSG_WORK_NOWORK  1002
+#define MSG_TOKEN        1003
+#define MSG_FINISH       1004
+
+ .....
+
+
+while zasobnik_neni_prazdny()
+{
+  citac++;
+  if ((citac % CHECK_MSG_AMOUNT)==0)
+  {
+    MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status);
+    if (flag)
+    {
+      //prisla zprava, je treba ji obslouzit
+      //v promenne status je tag (status.MPI_TAG), cislo odesilatele (status.MPI_SOURCE)
+      //a pripadne cislo chyby (status.MPI_ERROR)
+      swith (status.MPI_TAG)
+      {
+         case MSG_WORK_REQUEST : // zadost o praci, prijmout a dopovedet
+                                 // zaslat rozdeleny zasobnik a nebo odmitnuti MSG_WORK_NOWORK
+                                 break;
+         case MSG_WORK_SENT : // prisel rozdeleny zasobnik, prijmout
+                              // deserializovat a spustit vypocet
+                              break;
+         case MSG_WORK_NOWORK : // odmitnuti zadosti o praci
+                                // zkusit jiny proces
+                                // a nebo se prepnout do pasivniho stavu a cekat na token
+                                break
+         case MSG_TOKEN : //ukoncovaci token, prijmout a nasledne preposlat
+                          // - bily nebo cerny v zavislosti na stavu procesu
+                          break;
+         case MSG_FINISH : //konec vypoctu - proces 0 pomoci tokenu zjistil, ze jiz nikdo nema praci
+                           //a rozeslal zpravu ukoncujici vypocet
+                           //mam-li reseni, odeslu procesu 0
+                           //nasledne ukoncim spoji cinnost
+                           //jestlize se meri cas, nezapomen zavolat koncovou barieru MPI_Barrier (MPI_COMM_WORLD)
+                           MPI_Finalize();
+                           exit (0);
+                           break;
+         default : chyba("neznamy typ zpravy"); break;
+      }
+    }
+  }
+  expanduj_dalsi_stavy ();
+}
