@@ -2,6 +2,8 @@
 #include <stack>
 #include <cstring> // memcpy
 #include <cstdio>
+#include <sstream>
+#include <fstream>
 
 
 #define SPACE -1
@@ -18,36 +20,7 @@
 #define DOWN_LEFT '1'
 #define DOWN_RIGHT '3'
 
-/*
-
-19.10. 15:30 - fialaka1
-    - tak asi to funguje dobre, ale nekde to dela sileny leaky
-    - velikost zasobniku se relativne ustali
-
-17.10. 17:00 - fialaka1
-    - zmen je hodne... dost jsem to prekopal a cca to funguje
-    - nepada to na segfault... primitivni a hotovy priklady to resi dobre...
-
-    
-
-11.10. 13:00 - fialaka1
-    - upravil jsem ty swap -> logiku jsem strcil do swapThem() a ty jednotlive fce jen urci jak
-
-11.10. 12:00 - fialaka1
-    - pripadne zmeny jsem zakomentovaval
-    - dimension jsem udelal globalni a opravil v getPositionOfSpace
-    - swap() -- univerzalni prohozeni prvku
-    - checkCoord() -- kontrola souradnic pohybu
-    - nejak jsem vyprasil ty swap*() -- lisi se jen +/- u souradnice
-    - printTriangle() -- vypise triangle
-    - printTriangleExt() -- vypise a prida popisek
-    - debugSwaps() -- k otestovani pohybu
-    - do mainloop jsem naznacil reseni dale
-
- */
-
 using namespace std;
-
 
 int maxMoves;
 int dimension;
@@ -172,11 +145,11 @@ bool reconstruction (int **copyOfOriginalTriangle, Configuration configuration) 
     
     bool result = true;
     
-//     printTriangle(copyOfOriginalTriangle);
-//     for (int x = 0; x < configuration.movesCount; x++)
-//         cout << configuration.moves[x] << " ";
-//     cout << endl << endl;
-
+    //     printTriangle(copyOfOriginalTriangle);
+    //     for (int x = 0; x < configuration.movesCount; x++)
+    //         cout << configuration.moves[x] << " ";
+    //     cout << endl << endl;
+    
     
     for (int i=0; i < configuration.movesCount; i++) {
         // rozhodne o kroku
@@ -201,9 +174,9 @@ bool reconstruction (int **copyOfOriginalTriangle, Configuration configuration) 
         // check every step
         if (!result)
             return false;
-    }        
+    }
     
-    return true;    
+    return true;
 }
 
 bool isTriangleSolved(int **triangle) {
@@ -216,11 +189,11 @@ bool isTriangleSolved(int **triangle) {
     int num = 1;
     for (int x = 1; x < dimension; x++) {
         for (int y = 0; y <= x; y++) {
-                if (triangle[x][y] != num)
-                    return false;
-                num++;
+            if (triangle[x][y] != num)
+                return false;
+            num++;
         }
-    }    
+    }
     return true;
 }
 
@@ -258,32 +231,6 @@ bool canMoves(int moves) {
     return (moves < result);
 }
 
-// call printTriangle and add description
-void printTriangleExt(int **triangle, string desc) {
-    cout << "Triangle - " << desc << endl;    
-    printTriangle(triangle);
-    cout << "===== =====" << endl << endl;
-}
-
-// debug swaps
-void debugSwaps(int **triangle) {
-    printTriangleExt(triangle, "vstup");
-    swapLeft(triangle);
-    printTriangleExt(triangle, "left");
-    swapRight(triangle);
-    printTriangleExt(triangle, "right");    
-    swapUpLeft(triangle);
-    printTriangleExt(triangle, "up-left");    
-    swapUpLeft(triangle);
-    printTriangleExt(triangle, "up-left");    
-    swapUpRight(triangle);
-    printTriangleExt(triangle, "up-right");    
-    swapDownRight(triangle);
-    printTriangleExt(triangle, "down-right");    
-    swapDownLeft(triangle);
-    printTriangleExt(triangle, "down-left");    
-}
-
 Configuration * createConfiguration(Configuration * configuration, char value) {
     Configuration * newconfig;
     newconfig = new Configuration;
@@ -292,15 +239,13 @@ Configuration * createConfiguration(Configuration * configuration, char value) {
     // tady je copy lehce rychlejsi nez to delat pres cyklus
     copy(configuration->moves, configuration->moves + configuration->movesCount, newconfig->moves);
     /*for (int i = 0; i < configuration->movesCount; i++) {
-        newconfig->moves[i] = configuration->moves[i];
-    }*/
+     newconfig->moves[i] = configuration->moves[i];
+     }*/
     newconfig->moves[newconfig->movesCount-1] = value;
     return newconfig;
 }
 
 void mainProccesLoop() {
-    //debugSwaps(triangle);
-    
     stack<Configuration *> cstack;
     
     Configuration * firstConfiguration;
@@ -314,7 +259,7 @@ void mainProccesLoop() {
     // priste uz se jen prehraje datama (usetri se alokace a dealokace pameti
     copyOfOriginalTriangle = new int*[dimension];
     for (int x = 0; x < dimension; x++) {
-        copyOfOriginalTriangle[x] = new int[x+1];        
+        copyOfOriginalTriangle[x] = new int[x+1];
     }
     
     
@@ -324,11 +269,10 @@ void mainProccesLoop() {
         Configuration * configuration = NULL;
         configuration = cstack.top();
         cstack.pop();
-            //cout << "still ok 1 !" << endl;
-
-        //cout << "Step " << programSteps << " stack size " << cstack.size() << " results " << results_num << " best " << result << endl;
-        if ((programSteps % 1000000) == 0)
+        
+        if ((programSteps % 1000000) == 0) {
             cout << "Step " << programSteps << " stack size " << cstack.size() << " results " << results_num << " best " << result << endl;
+        }
         
         if (!canMoves(configuration->movesCount)) {
             //cout << "Wrong way" << endl;
@@ -338,23 +282,21 @@ void mainProccesLoop() {
         }
         
         // isSolved?
-            //cout << "still ok 1 !" << endl;
         int triangleStatus = checkTriangleStatus(*configuration);
-            //cout << "still ok 2 !" << endl;
         if (triangleStatus == TRIANGLE_SOLVED) {
-            //cout << "Result!" << endl;
+            // Triangle solved, save result and clean conf
             saveResult(configuration->movesCount, triangle);
             delete configuration->moves;
             delete configuration;
             continue;
         } else if (triangleStatus == INVALID_STEP) {
-            //cout << "Invalid step" << endl;
+            // You step out of triangle
             delete configuration->moves;
             delete configuration;
             continue;
         }
-        // create 6 other configurations and save to stack and 6 swaps
         
+        // create 6 other configurations and save to stack and 6 swaps
         if (configuration->moves[configuration->movesCount - 1] != TOP_RIGHT)
             cstack.push(createConfiguration(configuration, DOWN_LEFT));
         
@@ -368,117 +310,98 @@ void mainProccesLoop() {
             cstack.push(createConfiguration(configuration, RIGHT));
         
         if (configuration->moves[configuration->movesCount - 1] != DOWN_RIGHT)
-            cstack.push(createConfiguration(configuration, TOP_LEFT));        
+            cstack.push(createConfiguration(configuration, TOP_LEFT));
         
         if (configuration->moves[configuration->movesCount - 1] != DOWN_LEFT)
             cstack.push(createConfiguration(configuration, TOP_RIGHT));
         
-            //cout << "still ok 5 !" << endl;
-            
-        /*
-         * 
-         * */
-            
         // delete configuration
         // Odalokovat pamet
-        //delete newconfig.moves;
-            //cout << "still ok 6 !" << endl;
         delete configuration->moves;
         delete configuration;
-            //cout << "still ok 7 !" << endl;
-        //cout << endl;
     }
+    
+    // Show result
     cout << "Step " << programSteps << " stack size " << cstack.size() << " results " << results_num << " best " << result << endl;
-    cout << endl << endl << "Pocet reseni: " << results_num << endl << "Nejlepsi reseni je: " << result << endl << endl;
+    cout << endl << endl << "Pocet reseni: " << results_num << endl << "Nejmene pocet kroku: " << result << endl << endl;
 }
 
-void loadSampleData() {
-    dimension = 5;
-    maxMoves = dimension * dimension;
-    result = maxMoves;
-    results_num = 0;
-    
+void initTriangle() {
     triangle = new int*[dimension];
     
-    triangle[0] = new int[1];
-    triangle[1] = new int[2];
-    triangle[2] = new int[3];
-    triangle[3] = new int[4];
-    triangle[4] = new int[5];
-    
-    triangle[0][0] = 4;
-    triangle[1][0] = 5;
-    triangle[1][1] = 1;
-    triangle[2][0] = 8;
-    triangle[2][1] = 3;
-    triangle[2][2] = 9;
-    triangle[3][0] = 6;
-    triangle[3][1] = SPACE;
-    triangle[3][2] = 2;
-    triangle[3][3] = 7;
-    triangle[4][0] = 10;
-    triangle[4][1] = 11;
-    triangle[4][2] = 12;
-    triangle[4][3] = 13;
-    triangle[4][4] = 14;
+    for (int i=0; i<dimension; i++) {
+        triangle[i] = new int[i+1];
+    }
 }
 
-void loadSampleDataSmall() {
-    dimension = 3;
-    maxMoves = dimension * dimension;
-    result = maxMoves;
+void proccesLine(string line, int lineNumber) {
+    int number;
+    stringstream ss;
+    ss << line;
+    
+    for (int i=0; i<lineNumber; i++) {
+        ss >> number;
+        triangle[lineNumber-1][i] = number;
+    }
+}
+
+bool loadTriangleFromFile(string filePath) {
+    string line;
+    ifstream file (filePath);
+    
+    int lineNumber = 1;
+    // Check if its correctly open
+    if (file.is_open()) {
+        // Alloc triangle
+        initTriangle();
+        // Load all lines
+        while (getline(file, line)) {
+            // Procces line
+            proccesLine(line, lineNumber ++);
+        }
+        // Check for dummy input
+        if (lineNumber != dimension+1) {
+            return false;
+        }
+        
+        // Count paramateres
+        maxMoves = dimension * dimension;
+        result = maxMoves;
+        // Close file
+        file.close();
+        
+        return true;
+    } else {
+        return false;
+    }
+}
+
+void init() {
+    maxMoves = 0;
     results_num = 0;
-    
-    triangle = new int*[dimension];
-    
-    triangle[0] = new int[1];
-    triangle[1] = new int[2];
-    triangle[2] = new int[3];
-    
-    triangle[0][0] = 1;
-    triangle[1][0] = 3;
-    triangle[1][1] = 2;
-    triangle[2][0] = SPACE;
-    triangle[2][1] = 4;
-    triangle[2][2] = 5;
 }
 
-void loadSampleData4() {
-    dimension = 4;
-    maxMoves = dimension * dimension;
-    result = maxMoves;
-    results_num = 0;
+int main (int argc, char **argv) {
     
-    triangle = new int*[dimension];
+    if (argc < 3) {
+        return 1;
+    }
     
-    triangle[0] = new int[1];
-    triangle[1] = new int[2];
-    triangle[2] = new int[3];
-    triangle[3] = new int[4];
+    string fileName = argv[2];
+    dimension = stoi(argv[1]);
+    // Init default 
+    init ();
     
-    triangle[0][0] = 1;
-    triangle[1][0] = 3;
-    triangle[1][1] = 2;
-    triangle[2][0] = 8;
-    triangle[2][1] = 4;
-    triangle[2][2] = 5;
-    triangle[3][0] = 6;
-    triangle[3][1] = 7;
-    triangle[3][2] = SPACE;
-    triangle[3][3] = 9;
-}
+    if (loadTriangleFromFile(fileName)) {
+        // Run main procces
+        mainProccesLoop();
+        // Clean up data
+        cleanUp(triangle);
 
-int main () {
+        return 0;
+    }
     
-    loadSampleData();
+    cout << "false" << endl;
     
-    //loadSampleData4();
-    
-    //loadSampleDataSmall();
-
-    mainProccesLoop();
-
-    cleanUp(triangle);
-    
-    return 0;
+    return 1;
 }
