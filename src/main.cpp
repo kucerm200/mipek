@@ -198,10 +198,6 @@ bool isTriangleSolved(int **triangle) {
 }
 
 int checkTriangleStatus(Configuration configuration) {
-    
-    // Reconstruction of triangle
-    //int ** copyOfOriginalTriangle;
-    
     // hardcopy
     //copyOfOriginalTriangle = new int*[dimension];
     for (int x = 0; x < dimension; x++) {
@@ -236,12 +232,11 @@ Configuration * createConfiguration(Configuration * configuration, char value) {
     newconfig = new Configuration;
     newconfig->movesCount = configuration->movesCount + 1;
     newconfig->moves = new char[newconfig->movesCount];
-    // tady je copy lehce rychlejsi nez to delat pres cyklus
+    // Copy old moves
     copy(configuration->moves, configuration->moves + configuration->movesCount, newconfig->moves);
-    /*for (int i = 0; i < configuration->movesCount; i++) {
-     newconfig->moves[i] = configuration->moves[i];
-     }*/
+    // Add new move
     newconfig->moves[newconfig->movesCount-1] = value;
+    
     return newconfig;
 }
 
@@ -339,8 +334,11 @@ void proccesLine(string line, int lineNumber) {
     stringstream ss;
     ss << line;
     
+    // Load numbers to triangle
     for (int i=0; i<lineNumber; i++) {
+        // Get number from line
         ss >> number;
+        // Save number to triangle
         triangle[lineNumber-1][i] = number;
     }
 }
@@ -363,10 +361,6 @@ bool loadTriangleFromFile(string filePath) {
         if (lineNumber != dimension+1) {
             return false;
         }
-        
-        // Count paramateres
-        maxMoves = dimension * dimension;
-        result = maxMoves;
         // Close file
         file.close();
         
@@ -377,19 +371,23 @@ bool loadTriangleFromFile(string filePath) {
 }
 
 void init() {
-    maxMoves = 0;
+    maxMoves = dimension * dimension;
+    result = maxMoves;
     results_num = 0;
 }
 
 int main (int argc, char **argv) {
-    
+    // Check bad number of parameters
     if (argc < 3) {
         return 1;
     }
     
+    // Store arguments from command line
+    // Format is ./a.out 4 triangle4.txt
+    // Where 4 is dimension and triangle4.txt is path to file with input data
     string fileName = argv[2];
     dimension = stoi(argv[1]);
-    // Init default 
+    // Init default values
     init ();
     
     if (loadTriangleFromFile(fileName)) {
