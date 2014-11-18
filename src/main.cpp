@@ -33,6 +33,8 @@
 #define WAIT_FOR_JOB 9100
 #define WAIT_FOR_RESULT 9200
 #define WAIT_FOR_FINISH 9300
+#define SENDING_JOB 9400
+#define REQ 9500
 
 using namespace std;
 
@@ -60,6 +62,8 @@ typedef struct {
     int movesCount;
     char * moves;
 } Configuration;
+
+stack<Configuration *> cstack;
 
 // print triangle like "triangle"
 void printTriangle(int **triangle) {
@@ -284,31 +288,99 @@ void processWriteDebug3(string msg) {
 #endif    
 }
 
-// job request 
+/*
+ * 0-p -> praci nam poslou
+ * -1 -> praci nam neposle
+ * */
+bool comWin_send_req() {
+    processWriteDebug2("Entering send_req");
+    int req = 1;
+    for (int dest = 0 ; dest < p; dest++) {
+        if (dest == my_rank) {
+            continue;
+        }
+        MPI_Send(&req, 1, MPI_INT, dest, WAIT_FOR_JOB, MPI_COMM_WORLD);
+        
+        // cekat na odpoved
+        /*req = 0;
+        //usleep(1000000);
+        MPI_Iprobe(dest, WAIT_FOR_JOB, MPI_COMM_WORLD, &flag, &status);
+        if (flag) {
+            MPI_Recv(&req, 1, MPI_INT, dest, WAIT_FOR_JOB, MPI_COMM_WORLD, &status); // TODO
+        }*/
+        
+        /*if (req == 0) {
+            // neposle mi praci
+            continue;
+        } else {
+            // posle mi praci
+            // zpracuju prijmuti prace
+            return dest;
+        }*/
+    }    
+    return true;
+}
 
-bool comWin_send_job() { // TODO
-    processWriteDebug2("Entering send_job");
-    char message[LENGTH];
+/*
+ * 0-p -> zavazali jsme se ze dame praci
+ * -1 -> nedame praci nebo nebyla zadna zprava
+ * */
+int comWin_recv_req() {
+    processWriteDebug2("Entering recv_req");
+    int req = 1;
     MPI_Iprobe(MPI_ANY_SOURCE, WAIT_FOR_JOB, MPI_COMM_WORLD, &flag, &status);
     if (flag) {
         /* receiving message by blocking receive */
-        MPI_Recv(&message, LENGTH, MPI_CHAR, MPI_ANY_SOURCE, WAIT_FOR_JOB, MPI_COMM_WORLD, &status);
-        processWrite("Got JOB: " + *message);
-        return true;
+        MPI_Recv(&req, 1, MPI_INT, MPI_ANY_SOURCE, WAIT_FOR_JOB, MPI_COMM_WORLD, &status);
+        processWriteDebug2("Got REQ");
+        
+        // odpoved jestli jo nebo ne
+        
+        //req = 0;
+
+        if (cstack.size() > 1) { // PROSTOR PRO ZLEPSENI
+            // poslu
+            //req = 1;
+            return status.MPI_SOURCE;
+        }
+        //MPI_Send(&req, 1, MPI_INT, status.MPI_SOURCE, WAIT_FOR_JOB, MPI_COMM_WORLD);
     }
-    return false;
+    return -1;
+}
+
+bool comWin_send_job(int dest) { // TODO
+    processWriteDebug2("Entering send_job");
+    int req = 1;
+    
+    /*
+     * puleni zasobniku
+     * packovani do MPI_PACK
+     * posilani
+     * */
+    
+    MPI_Send(&req, 1, MPI_INT, dest, SENDING_JOB, MPI_COMM_WORLD); 
+    return true;
 }
 
 bool comWin_recv_job() { // TODO
     processWriteDebug2("Entering recv_job");
+    
+    // prijem prace
+    /*
+     * prijem zpravy
+     * rozbaleni MPI_PACK
+     * naplneni zasobniku
+     * */
+    
+    /*
     char message[LENGTH];
     MPI_Iprobe(MPI_ANY_SOURCE, WAIT_FOR_JOB, MPI_COMM_WORLD, &flag, &status);
     if (flag) {
-        /* receiving message by blocking receive */
-        MPI_Recv(&message, LENGTH, MPI_CHAR, MPI_ANY_SOURCE, WAIT_FOR_JOB, MPI_COMM_WORLD, &status);
+        
+        MPI_Recv(&message, LENGTH, MPI_CHAR, MPI_ANY_SOURCE, SENDING_JOB, MPI_COMM_WORLD, &status);
         processWrite("Got JOB: " + *message);
         return true;
-    }
+    }*/
     return false;
 }
 
@@ -368,48 +440,60 @@ void comWin(int type) { // komunikacni okenko
     int source;
     int flag = 0;
 
-    processWriteDebug("Entering communication window");
+    processWriteDebug2("Entering communication window");
     
     switch (type) {
         case WAIT_FOR_JOB:
-            while (!comWin_recv_job()) {
+            while (true) {
                 comWin_recv_result();
                 if (comWin_recv_end()) {
                     if (comWin_send_end()) {
                         break;
                     }
                 }
+                //int dest = comWin_send_req();
+                //int dest = -1;
+                if (comWin_send_req()) {
+                    if (comWin_recv_job()) {
+                        break;
+                    }
+                }
             }
             break;
         case WAIT_FOR_FINISH:
+            while (comWin_recv_req() != -1) {;} // bool parametr na nasrani
             comWin_send_end();
             break;
         case WAIT_FOR_RESULT:
             comWin_send_result();
+            comWin_recv_req();
+        case REQ:
+            comWin_recv_req();
+            comWin_recv_result();
+            break;
         default:
             // Code
             break;
     }    
-    processWriteDebug("Exiting communication window");
+    processWriteDebug2("Exiting communication window");
     
 }
 
 void soft_sync() {
-    processWriteDebug("Soft-sync invoked.");
-    usleep(1000000);
+    //processWriteDebug("Soft-sync invoked.");
+    //usleep(1000000);
 }
 
 void sync() {
     processWriteDebug("Sync invoked.");
     // synchronization
     MPI_Barrier(MPI_COMM_WORLD);
-    usleep(10000);
+    //usleep(10000);
 }
 
 void mainProccesLoop() {
     
     processWriteDebug("Entering mainProccesLoop");
-    stack<Configuration *> cstack;
     int programSteps = 0;
     
     // pripravim jednu kopii trojuhelniku
@@ -442,6 +526,10 @@ void mainProccesLoop() {
         Configuration * configuration = NULL;
         configuration = cstack.top();
         cstack.pop();
+        
+        if ((programSteps % 1000) == 0) {
+            comWin(REQ);
+        }
         
         if ((programSteps % 1000000) == 0) {
             cout << "Step " << programSteps << " stack size " << cstack.size() << " results " << results_num << " best " << result << endl;
