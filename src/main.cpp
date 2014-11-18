@@ -1,9 +1,11 @@
+#include "mpi.h"
 #include <iostream>
 #include <stack>
 #include <cstring> // memcpy
 #include <cstdio>
 #include <sstream>
 #include <fstream>
+#include <unistd.h> // usleep
 
 
 #define SPACE -1
@@ -20,7 +22,22 @@
 #define DOWN_LEFT '1'
 #define DOWN_RIGHT '3'
 
+#define DEBUG 1
+//#define DEBUG2 1
+#define DEBUG3 1
+#define LENGTH 100
+
+#define BLACK 0
+#define WHITE 1
+
+#define WAIT_FOR_JOB 9100
+#define WAIT_FOR_RESULT 9200
+#define WAIT_FOR_FINISH 9300
+
 using namespace std;
+
+MPI_Status status;
+int my_rank, p, flag;
 
 int maxMoves;
 int dimension;
@@ -28,6 +45,11 @@ int ** triangle = NULL;
 int result;
 int results_num;
 int ** copyOfOriginalTriangle = NULL;
+
+bool hasToken;
+int token;
+
+double t1, t2;
 
 typedef struct {
     int x;
@@ -240,14 +262,154 @@ Configuration * createConfiguration(Configuration * configuration, char value) {
     return newconfig;
 }
 
-void mainProccesLoop() {
-    stack<Configuration *> cstack;
+void processWrite(string msg) {
+    cout << my_rank << "\t: " << msg << endl << flush;
+}
+
+void processWriteDebug(string msg) {
+#ifdef DEBUG
+    cout << my_rank << "\t: " << msg << endl << flush;
+#endif    
+}
+
+void processWriteDebug2(string msg) {
+#ifdef DEBUG2
+    cout << my_rank << "\t: " << msg << endl << flush;
+#endif    
+}
+
+void processWriteDebug3(string msg) {
+#ifdef DEBUG3
+    cout << my_rank << "\t: " << msg << endl << flush;
+#endif    
+}
+
+// job request 
+
+bool comWin_send_job() { // TODO
+    processWriteDebug2("Entering send_job");
+    char message[LENGTH];
+    MPI_Iprobe(MPI_ANY_SOURCE, WAIT_FOR_JOB, MPI_COMM_WORLD, &flag, &status);
+    if (flag) {
+        /* receiving message by blocking receive */
+        MPI_Recv(&message, LENGTH, MPI_CHAR, MPI_ANY_SOURCE, WAIT_FOR_JOB, MPI_COMM_WORLD, &status);
+        processWrite("Got JOB: " + *message);
+        return true;
+    }
+    return false;
+}
+
+bool comWin_recv_job() { // TODO
+    processWriteDebug2("Entering recv_job");
+    char message[LENGTH];
+    MPI_Iprobe(MPI_ANY_SOURCE, WAIT_FOR_JOB, MPI_COMM_WORLD, &flag, &status);
+    if (flag) {
+        /* receiving message by blocking receive */
+        MPI_Recv(&message, LENGTH, MPI_CHAR, MPI_ANY_SOURCE, WAIT_FOR_JOB, MPI_COMM_WORLD, &status);
+        processWrite("Got JOB: " + *message);
+        return true;
+    }
+    return false;
+}
+
+bool comWin_recv_result() {
+    processWriteDebug2("Entering recv_result");
+    int message;
+    MPI_Iprobe(MPI_ANY_SOURCE, WAIT_FOR_RESULT, MPI_COMM_WORLD, &flag, &status);
+    if (flag) {
+        /* receiving message by blocking receive */
+        MPI_Recv(&message, LENGTH, MPI_INT, MPI_ANY_SOURCE, WAIT_FOR_RESULT, MPI_COMM_WORLD, &status);
+        processWrite("Got RESULT: " + to_string(message));
+        saveResult(message, triangle);
+        return true;
+    }    
+    return false;
+}
+
+bool comWin_send_result() {
+    processWriteDebug2("Entering send_result");
+    for (int dest = 0 ; dest < p; dest++) {
+        if (dest == my_rank) {
+            continue;
+        }
+        MPI_Send(&result, 1, MPI_INT, dest, WAIT_FOR_RESULT, MPI_COMM_WORLD);
+    }    
+    return true;
+}
+
+bool comWin_recv_end() {
+    processWriteDebug2("Entering recv_end");
+    int message;
+    MPI_Iprobe(MPI_ANY_SOURCE, WAIT_FOR_FINISH, MPI_COMM_WORLD, &flag, &status);
+    if (flag) {
+        /* receiving message by blocking receive */
+        MPI_Recv(&message, 1, MPI_INT, MPI_ANY_SOURCE, WAIT_FOR_FINISH, MPI_COMM_WORLD, &status);
+        processWrite("Got FINISH");
+        hasToken = true;
+        return true;
+    }    
+    return false;
+}
+
+bool comWin_send_end() {
+    processWriteDebug3("Entering send_end");
+    if (hasToken && token == WHITE) {
+        int dest = (my_rank + 1) % p;
+        int message = WHITE;
+        MPI_Send(&message, 1, MPI_INT, dest, WAIT_FOR_FINISH, MPI_COMM_WORLD);
+        // tady by asi melo byt na cekani jestli nekdo rekne ze jeste maka nebo ne
+        hasToken = false;
+        return true;
+    }
+    return false;
+}
+
+void comWin(int type) { // komunikacni okenko
+    int source;
+    int flag = 0;
+
+    processWriteDebug("Entering communication window");
     
-    Configuration * firstConfiguration;
-    firstConfiguration = new Configuration;
-    firstConfiguration->movesCount = 0;
-    firstConfiguration->moves = new char[0];
-    cstack.push(firstConfiguration);
+    switch (type) {
+        case WAIT_FOR_JOB:
+            while (!comWin_recv_job()) {
+                comWin_recv_result();
+                if (comWin_recv_end()) {
+                    if (comWin_send_end()) {
+                        break;
+                    }
+                }
+            }
+            break;
+        case WAIT_FOR_FINISH:
+            comWin_send_end();
+            break;
+        case WAIT_FOR_RESULT:
+            comWin_send_result();
+        default:
+            // Code
+            break;
+    }    
+    processWriteDebug("Exiting communication window");
+    
+}
+
+void soft_sync() {
+    processWriteDebug("Soft-sync invoked.");
+    usleep(1000000);
+}
+
+void sync() {
+    processWriteDebug("Sync invoked.");
+    // synchronization
+    MPI_Barrier(MPI_COMM_WORLD);
+    usleep(10000);
+}
+
+void mainProccesLoop() {
+    
+    processWriteDebug("Entering mainProccesLoop");
+    stack<Configuration *> cstack;
     int programSteps = 0;
     
     // pripravim jednu kopii trojuhelniku
@@ -257,6 +419,22 @@ void mainProccesLoop() {
         copyOfOriginalTriangle[x] = new int[x+1];
     }
     
+    sync();
+    
+    // process 0 pripravit první konfiguraci
+    if (my_rank == 0) {
+        processWrite("Creating firstConfiguration");
+        Configuration * firstConfiguration;
+        firstConfiguration = new Configuration;
+        firstConfiguration->movesCount = 0;
+        firstConfiguration->moves = new char[0];
+        cstack.push(firstConfiguration);
+    } else {
+        // ostatni procesy by zde mely cekat az dostanu konfigurace
+        processWrite("Waiting for first configuration");
+        comWin(WAIT_FOR_JOB);
+    }
+    soft_sync();
     
     while (cstack.size() > 0) {
         programSteps++;
@@ -281,8 +459,10 @@ void mainProccesLoop() {
         if (triangleStatus == TRIANGLE_SOLVED) {
             // Triangle solved, save result and clean conf
             saveResult(configuration->movesCount, triangle);
+            comWin(WAIT_FOR_RESULT);    // volani pro poslani noveho vysledku
             delete configuration->moves;
             delete configuration;
+            soft_sync();
             continue;
         } else if (triangleStatus == INVALID_STEP) {
             // You step out of triangle
@@ -316,9 +496,12 @@ void mainProccesLoop() {
         delete configuration;
     }
     
+    soft_sync();
+    
     // Show result
-    cout << "Step " << programSteps << " stack size " << cstack.size() << " results " << results_num << " best " << result << endl;
-    cout << endl << endl << "Pocet reseni: " << results_num << endl << "Nejmene pocet kroku: " << result << endl << endl;
+    //cout << "Step " << programSteps << " stack size " << cstack.size() << " results " << results_num << " best " << result << endl;
+    //cout << endl << endl << "Pocet reseni: " << results_num << endl << "Nejmene pocet kroku: " << result << endl << endl;
+    comWin(WAIT_FOR_FINISH);
 }
 
 void initTriangle() {
@@ -374,6 +557,11 @@ void init() {
     maxMoves = dimension * dimension;
     result = maxMoves;
     results_num = 0;
+    hasToken = false;
+    if (my_rank == 0) {
+        hasToken = true;
+    }
+    token = WHITE;
 }
 
 int main (int argc, char **argv) {
@@ -382,24 +570,49 @@ int main (int argc, char **argv) {
         return 1;
     }
     
+    /* start up MPI */
+    MPI_Init(&argc, &argv);
+    
+    /* find out process rank */
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+    
+    /* find out number of processes */
+    MPI_Comm_size(MPI_COMM_WORLD, &p);
+    
+    /* time measuring - start */
+    t1 = MPI_Wtime();
+    
     // Store arguments from command line
     // Format is ./a.out 4 triangle4.txt
     // Where 4 is dimension and triangle4.txt is path to file with input data
     string fileName = argv[2];
     dimension = stoi(argv[1]);
     // Init default values
-    init ();
+    init();
     
-    if (loadTriangleFromFile(fileName)) {
-        // Run main procces
-        mainProccesLoop();
-        // Clean up data
-        cleanUp(triangle);
-
-        return 0;
-    }
+    loadTriangleFromFile(fileName);
+        
+    sync();
     
-    cout << "false" << endl;
+    // Run main procces
+    mainProccesLoop();
     
-    return 1;
+    
+    // Clean up data
+    cleanUp(triangle);
+    
+    sync();
+    
+    /* time measuring - stop */
+    t2 = MPI_Wtime();
+    
+    //printf("%d\t: Elapsed time is %f.\n",my_rank,t2-t1);
+    processWrite("Elapsed time is " + to_string(t2-t1));
+    
+    sync();
+    
+    /* shut down MPI */
+    MPI_Finalize();
+    
+    return 0;
 }
