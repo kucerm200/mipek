@@ -22,13 +22,13 @@
 #define DOWN_LEFT '1'
 #define DOWN_RIGHT '3'
 
-#define DEBUG 1
+//#define DEBUG 1
 //#define DEBUG2 1
-#define DEBUG3 1
-#define LENGTH 100
+//#define DEBUG3 1
+//#define DEBUG4 1
+#define LENGTH 10000
 
-#define BLACK 0
-#define WHITE 1
+#define END_THRESHOLD 9999
 
 #define WAIT_FOR_JOB 9100
 #define WAIT_FOR_RESULT 9200
@@ -51,6 +51,9 @@ int ** copyOfOriginalTriangle = NULL;
 bool hasToken;
 int token;
 
+int req_dest;
+int job_dest;
+
 double t1, t2;
 
 typedef struct {
@@ -63,7 +66,65 @@ typedef struct {
     char * moves;
 } Configuration;
 
-stack<Configuration *> cstack;
+// vlastni implementace zasobniku.. muzeme tak sahat i na dno
+class ownStack {
+
+private:
+    int stack_size;
+    int startSize;
+    int top_position;
+    int bottom_position;
+    Configuration ** data;
+    
+public:
+    
+    ownStack() {
+        stack_size = 0;
+        startSize = 100000000;
+        top_position = 1;
+        bottom_position = 0;
+        data = new Configuration*[startSize];
+    }
+    
+    int size() {
+        return stack_size;
+    }
+ 
+    void pop() {        
+        //data[top_position-1] = NULL;
+        top_position--;
+        stack_size--;
+    }
+
+    Configuration * top() {
+        return data[top_position-1];
+    }
+    
+    void pop_bottom() {
+        //data[bottom_position+1] = NULL;
+        bottom_position++;
+        stack_size--;
+    }
+    
+    Configuration * bottom() {
+        return data[bottom_position+1];
+    }
+    
+    void push(Configuration * configuration) {
+        data[top_position] = configuration;
+        top_position++;
+        stack_size++;
+    }
+    
+    void push_bottom(Configuration * configuration) {
+        data[bottom_position] = configuration;
+        bottom_position--;
+        stack_size++;
+    }
+};
+
+//stack<Configuration *> cstack;
+ownStack cstack;
 
 // print triangle like "triangle"
 void printTriangle(int **triangle) {
@@ -251,6 +312,7 @@ int checkTriangleStatus(Configuration configuration) {
 
 bool canMoves(int moves) {
     return (moves < result);
+    //return (moves < maxMoves); // HACK aby byl prostor stejne velky
 }
 
 Configuration * createConfiguration(Configuration * configuration, char value) {
@@ -288,99 +350,107 @@ void processWriteDebug3(string msg) {
 #endif    
 }
 
-/*
- * 0-p -> praci nam poslou
- * -1 -> praci nam neposle
- * */
+void processWriteDebug4(string msg) {
+#ifdef DEBUG4
+    cout << my_rank << "\t: " << msg << endl << flush;
+#endif    
+}
+
 bool comWin_send_req() {
     processWriteDebug2("Entering send_req");
     int req = 1;
-    for (int dest = 0 ; dest < p; dest++) {
-        if (dest == my_rank) {
-            continue;
-        }
-        MPI_Send(&req, 1, MPI_INT, dest, WAIT_FOR_JOB, MPI_COMM_WORLD);
-        
-        // cekat na odpoved
-        /*req = 0;
-        //usleep(1000000);
-        MPI_Iprobe(dest, WAIT_FOR_JOB, MPI_COMM_WORLD, &flag, &status);
-        if (flag) {
-            MPI_Recv(&req, 1, MPI_INT, dest, WAIT_FOR_JOB, MPI_COMM_WORLD, &status); // TODO
-        }*/
-        
-        /*if (req == 0) {
-            // neposle mi praci
-            continue;
-        } else {
-            // posle mi praci
-            // zpracuju prijmuti prace
-            return dest;
-        }*/
-    }    
+    
+    MPI_Send(&req, 1, MPI_INT, req_dest, WAIT_FOR_JOB, MPI_COMM_WORLD);
+
     return true;
 }
 
-/*
- * 0-p -> zavazali jsme se ze dame praci
- * -1 -> nedame praci nebo nebyla zadna zprava
- * */
 int comWin_recv_req() {
     processWriteDebug2("Entering recv_req");
     int req = 1;
+    processWriteDebug4("pre iprobe");
     MPI_Iprobe(MPI_ANY_SOURCE, WAIT_FOR_JOB, MPI_COMM_WORLD, &flag, &status);
+    processWriteDebug4("post iprobe");
     if (flag) {
         /* receiving message by blocking receive */
+        processWriteDebug4("pre MPI");
         MPI_Recv(&req, 1, MPI_INT, MPI_ANY_SOURCE, WAIT_FOR_JOB, MPI_COMM_WORLD, &status);
-        processWriteDebug2("Got REQ");
+        processWriteDebug4("post MPI");
+        processWriteDebug("Got REQ");
         
-        // odpoved jestli jo nebo ne
-        
-        //req = 0;
-
-        if (cstack.size() > 1) { // PROSTOR PRO ZLEPSENI
-            // poslu
-            //req = 1;
-            return status.MPI_SOURCE;
-        }
-        //MPI_Send(&req, 1, MPI_INT, status.MPI_SOURCE, WAIT_FOR_JOB, MPI_COMM_WORLD);
+        //return status.MPI_SOURCE;
+        return 2;       // HACK -- nepotrebujeme znat kdo se nas ptal
     }
     return -1;
 }
 
-bool comWin_send_job(int dest) { // TODO
+bool comWin_send_job() {
     processWriteDebug2("Entering send_job");
-    int req = 1;
+
+    int size = (cstack.size() - 1) / 2;       // treti verze
     
-    /*
-     * puleni zasobniku
-     * packovani do MPI_PACK
-     * posilani
-     * */
+    int position;
+    char buffer[LENGTH];
     
-    MPI_Send(&req, 1, MPI_INT, dest, SENDING_JOB, MPI_COMM_WORLD); 
+    for (int i = 0; i < size; i++) {
+        position = 0;
+        processWriteDebug4("pre pop_bottom");
+        Configuration * configuration = NULL;
+        //configuration = cstack.top();
+        //cstack.pop();
+        
+        configuration = cstack.bottom();        // treti verze posila praci ze dna zasobniku
+        cstack.pop_bottom();
+                
+        MPI_Pack(&configuration->movesCount, 1, MPI_INT, buffer, LENGTH, &position, MPI_COMM_WORLD);
+        MPI_Pack(configuration->moves, configuration->movesCount, MPI_CHAR, buffer, LENGTH, &position, MPI_COMM_WORLD);
+        processWriteDebug4("pre MPI send");
+        MPI_Send (buffer, position, MPI_PACKED, job_dest, SENDING_JOB, MPI_COMM_WORLD);
+        processWriteDebug4("post MPI");
+        
+        delete configuration->moves;
+        delete configuration;
+    }
+
     return true;
 }
 
-bool comWin_recv_job() { // TODO
+bool comWin_recv_job() {
     processWriteDebug2("Entering recv_job");
     
-    // prijem prace
-    /*
-     * prijem zpravy
-     * rozbaleni MPI_PACK
-     * naplneni zasobniku
-     * */
+    bool recv = false;
+
+    int position;
+    char buffer[LENGTH];
     
-    /*
-    char message[LENGTH];
-    MPI_Iprobe(MPI_ANY_SOURCE, WAIT_FOR_JOB, MPI_COMM_WORLD, &flag, &status);
-    if (flag) {
+    processWriteDebug4("pre recv iprobe");
+    MPI_Iprobe(MPI_ANY_SOURCE, SENDING_JOB, MPI_COMM_WORLD, &flag, &status);
+    while (flag) {
         
-        MPI_Recv(&message, LENGTH, MPI_CHAR, MPI_ANY_SOURCE, SENDING_JOB, MPI_COMM_WORLD, &status);
-        processWrite("Got JOB: " + *message);
+        position = 0;
+        processWriteDebug4("pre new config");
+        Configuration * configuration = NULL;
+        configuration = new Configuration;
+        
+        MPI_Recv(buffer, LENGTH, MPI_PACKED, MPI_ANY_SOURCE, SENDING_JOB, MPI_COMM_WORLD, &status);
+        
+        MPI_Unpack(buffer, LENGTH, &position, &configuration->movesCount, 1, MPI_INT, MPI_COMM_WORLD);
+        
+        processWriteDebug4("pre new");
+        configuration->moves = new char[configuration->movesCount];
+        
+        MPI_Unpack(buffer, LENGTH, &position, configuration->moves, configuration->movesCount, MPI_CHAR, MPI_COMM_WORLD);
+        
+        processWriteDebug4("pre push");
+        cstack.push(configuration);
+        
+        recv = true;
+        MPI_Iprobe(MPI_ANY_SOURCE, SENDING_JOB, MPI_COMM_WORLD, &flag, &status);
+    }
+    if (recv) {
+        processWriteDebug("Got JOB");
         return true;
-    }*/
+    }
     return false;
 }
 
@@ -389,9 +459,8 @@ bool comWin_recv_result() {
     int message;
     MPI_Iprobe(MPI_ANY_SOURCE, WAIT_FOR_RESULT, MPI_COMM_WORLD, &flag, &status);
     if (flag) {
-        /* receiving message by blocking receive */
         MPI_Recv(&message, LENGTH, MPI_INT, MPI_ANY_SOURCE, WAIT_FOR_RESULT, MPI_COMM_WORLD, &status);
-        processWrite("Got RESULT: " + to_string(message));
+        processWriteDebug("Got RESULT: " + to_string(message));
         saveResult(message, triangle);
         return true;
     }    
@@ -406,18 +475,23 @@ bool comWin_send_result() {
         }
         MPI_Send(&result, 1, MPI_INT, dest, WAIT_FOR_RESULT, MPI_COMM_WORLD);
     }    
+    processWriteDebug("sent result");
     return true;
 }
 
 bool comWin_recv_end() {
     processWriteDebug2("Entering recv_end");
-    int message;
     MPI_Iprobe(MPI_ANY_SOURCE, WAIT_FOR_FINISH, MPI_COMM_WORLD, &flag, &status);
+    int x;
     if (flag) {
-        /* receiving message by blocking receive */
-        MPI_Recv(&message, 1, MPI_INT, MPI_ANY_SOURCE, WAIT_FOR_FINISH, MPI_COMM_WORLD, &status);
-        processWrite("Got FINISH");
+        MPI_Recv(&x, 1, MPI_INT, MPI_ANY_SOURCE, WAIT_FOR_FINISH, MPI_COMM_WORLD, &status);
+        if (token == 0) {
+            token = 1;
+        } else {
+            token = x;
+        }
         hasToken = true;
+        processWriteDebug("recv token");
         return true;
     }    
     return false;
@@ -425,63 +499,91 @@ bool comWin_recv_end() {
 
 bool comWin_send_end() {
     processWriteDebug3("Entering send_end");
-    if (hasToken && token == WHITE) {
+    if (hasToken) {
         int dest = (my_rank + 1) % p;
-        int message = WHITE;
-        MPI_Send(&message, 1, MPI_INT, dest, WAIT_FOR_FINISH, MPI_COMM_WORLD);
+        token++;
+        if (my_rank) {
+            if (token > 2*p) {
+                token = END_THRESHOLD;
+            }
+        }
+        MPI_Send(&token, 1, MPI_INT, dest, WAIT_FOR_FINISH, MPI_COMM_WORLD);
         // tady by asi melo byt na cekani jestli nekdo rekne ze jeste maka nebo ne
         hasToken = false;
+        processWriteDebug("sent token");
         return true;
     }
     return false;
 }
 
-void comWin(int type) { // komunikacni okenko
+bool comWin(int type) { // komunikacni okenko
     int source;
     int flag = 0;
-
+    int dest = -1;
+    int sent_req = 0;
+    
     processWriteDebug2("Entering communication window");
     
     switch (type) {
         case WAIT_FOR_JOB:
             while (true) {
-                comWin_recv_result();
-                if (comWin_recv_end()) {
-                    if (comWin_send_end()) {
-                        break;
-                    }
+                // pokus o prijem prace
+                /*if (comWin_recv_job()) {
+                    break;
+                }*/
+                // poslu zadost o praci 
+                if (sent_req == 0) { // THERE SHOULD NOT BE A MAGIC NUMBER
+                    sent_req++;
+                    comWin_send_req();
                 }
-                //int dest = comWin_send_req();
-                //int dest = -1;
-                if (comWin_send_req()) {
-                    if (comWin_recv_job()) {
-                        break;
-                    }
+                //usleep(1000); // HACK
+                // pockam na novy vysledek
+                if (comWin_recv_result()) {
+                    token = 0;
                 }
+                
+                // stal se konec vypoctu?
+                comWin_recv_end();
+                
+                if (token >= END_THRESHOLD) {
+                    return false;
+                }
+
+                // pokus o prijem prace
+                if (comWin_recv_job()) {
+                        token = 0;
+                        break;
+                }
+                comWin_send_end();
             }
             break;
-        case WAIT_FOR_FINISH:
-            while (comWin_recv_req() != -1) {;} // bool parametr na nasrani
+            
+        case WAIT_FOR_FINISH: // DUMMY
+            //while (comWin_recv_req() != -1) {;} //
             comWin_send_end();
             break;
-        case WAIT_FOR_RESULT:
-            comWin_send_result();
-            comWin_recv_req();
+            
+        case WAIT_FOR_RESULT: // vola se kdyz mam novej vysledek
+            comWin_send_result(); // to je umyslne... pro oboji se vykona to same
+            token = 0;
+            
         case REQ:
-            comWin_recv_req();
+            if (cstack.size() > 3) {
+                if (comWin_recv_req() != -1) {
+                    comWin_send_job();
+                    token = 0;
+                }
+                //while (comWin_recv_req() != -1) {;}
+            }
             comWin_recv_result();
             break;
+            
         default:
             // Code
             break;
     }    
     processWriteDebug2("Exiting communication window");
-    
-}
-
-void soft_sync() {
-    //processWriteDebug("Soft-sync invoked.");
-    //usleep(1000000);
+    return true;    
 }
 
 void sync() {
@@ -494,7 +596,11 @@ void sync() {
 void mainProccesLoop() {
     
     processWriteDebug("Entering mainProccesLoop");
+    /*sync();
+    cout << my_rank << " dest: " << (my_rank + 1) % p << " req: " << (my_rank -1 + p) % p << endl;
+    sync();*/
     int programSteps = 0;
+    bool first_run = true;
     
     // pripravim jednu kopii trojuhelniku
     // priste uz se jen prehraje datama (usetri se alokace a dealokace pameti
@@ -516,23 +622,39 @@ void mainProccesLoop() {
     } else {
         // ostatni procesy by zde mely cekat az dostanu konfigurace
         processWrite("Waiting for first configuration");
+        //soft_sync();
+        first_run = false;
         comWin(WAIT_FOR_JOB);
     }
-    soft_sync();
     
-    while (cstack.size() > 0) {
+    if (cstack.size() > 0)    // HACK -- jinak je to moc rychly
+    while (true) {
+        
+        if (cstack.size() == 0) {
+            if (!comWin(WAIT_FOR_JOB)) {
+                break;
+            }
+        }
+        
         programSteps++;
         // get configuration from stack
         Configuration * configuration = NULL;
         configuration = cstack.top();
         cstack.pop();
         
-        if ((programSteps % 1000) == 0) {
+        if (first_run && cstack.size() > 3) {
+            processWrite("First configuration created");
+            comWin(REQ);
+            first_run = false;
+        }
+        
+        if ((programSteps % 100) == 0) {
+            // komunikacni okenko
             comWin(REQ);
         }
         
-        if ((programSteps % 1000000) == 0) {
-            cout << "Step " << programSteps << " stack size " << cstack.size() << " results " << results_num << " best " << result << endl;
+        if ((programSteps % 10000000) == 0) {
+            cout << my_rank << ": Step " << programSteps << " stack size " << cstack.size() << " results " << results_num << " best " << result << endl;
         }
         
         if (!canMoves(configuration->movesCount)) {
@@ -547,10 +669,9 @@ void mainProccesLoop() {
         if (triangleStatus == TRIANGLE_SOLVED) {
             // Triangle solved, save result and clean conf
             saveResult(configuration->movesCount, triangle);
-            comWin(WAIT_FOR_RESULT);    // volani pro poslani noveho vysledku
+            comWin(WAIT_FOR_RESULT);                    // volani pro poslani noveho vysledku
             delete configuration->moves;
             delete configuration;
-            soft_sync();
             continue;
         } else if (triangleStatus == INVALID_STEP) {
             // You step out of triangle
@@ -584,12 +705,9 @@ void mainProccesLoop() {
         delete configuration;
     }
     
-    soft_sync();
-    
     // Show result
-    //cout << "Step " << programSteps << " stack size " << cstack.size() << " results " << results_num << " best " << result << endl;
-    //cout << endl << endl << "Pocet reseni: " << results_num << endl << "Nejmene pocet kroku: " << result << endl << endl;
     comWin(WAIT_FOR_FINISH);
+    cout << my_rank << ": Step " << programSteps << " stack size " << cstack.size() << " results " << results_num << " best " << result << endl;
 }
 
 void initTriangle() {
@@ -645,11 +763,14 @@ void init() {
     maxMoves = dimension * dimension;
     result = maxMoves;
     results_num = 0;
-    hasToken = false;
     if (my_rank == 0) {
         hasToken = true;
+    } else {
+        hasToken = false;
     }
-    token = WHITE;
+    token = 0;
+    req_dest = (my_rank - 1 + p) % p;   // kam budu posilat zadosti o praci
+    job_dest = (my_rank + 1) % p;       // kam budu posilat praci
 }
 
 int main (int argc, char **argv) {
@@ -675,13 +796,12 @@ int main (int argc, char **argv) {
     // Where 4 is dimension and triangle4.txt is path to file with input data
     string fileName = argv[2];
     dimension = stoi(argv[1]);
+    
     // Init default values
     init();
     
     loadTriangleFromFile(fileName);
         
-    sync();
-    
     // Run main procces
     mainProccesLoop();
     
@@ -696,8 +816,6 @@ int main (int argc, char **argv) {
     
     //printf("%d\t: Elapsed time is %f.\n",my_rank,t2-t1);
     processWrite("Elapsed time is " + to_string(t2-t1));
-    
-    sync();
     
     /* shut down MPI */
     MPI_Finalize();
