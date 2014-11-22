@@ -1,0 +1,60 @@
+0: Step -1180000000 stack size 29 results 5 best 16
+1       : Got FINISH
+1       : sent finish
+1: after cycle
+0       : sent finish
+0: after cycle
+0: steps -1171361871 best result 16
+1: steps -1964335958 best result 16
+2       : Got FINISH
+2       : sent finish
+2: after cycle
+3       : Got FINISH
+3       : sent finish
+3: after cycle
+3: steps 206814980 best result 16
+2: steps 197923209 best result 16
+2       : Elapsed time is 3880.753621
+31      : Elapsed time is 3880.753627
+0       : Elapsed time is 3880.753627
+        : Elapsed time is 3880.753625
+
+4p - v1 - 3880 - 64 minut
+
+
+
+
+0       : sent finish
+0: steps -1305476602 best result 16
+1: Step -1370000000 stack size 93 results 5 best 16
+1: Step -1360000000 stack size 88 results 5 best 16
+1: Step -1350000000 stack size 98 results 5 best 16
+1: Step -1340000000 stack size 93 results 5 best 16
+1: Step -1330000000 stack size 88 results 5 best 16
+1: Step -1320000000 stack size 88 results 5 best 16
+1: Step -1310000000 stack size 88 results 5 best 16
+1: Step -1300000000 stack size 83 results 5 best 16
+1: Step -1290000000 stack size 78 results 5 best 16
+1: Step -1280000000 stack size 63 results 5 best 16
+1: Step -1270000000 stack size 63 results 5 best 16
+1: Step -1260000000 stack size 58 results 5 best 16
+1: Step -1250000000 stack size 53 results 5 best 16
+1: Step -1240000000 stack size 28 results 5 best 16
+1: Step -1230000000 stack size 28 results 5 best 16
+1: Step -1220000000 stack size 28 results 5 best 16
+1: Step -1210000000 stack size 28 results 5 best 16
+1       : Got FINISH
+1       : sent finish
+1: steps -1204812102 best result 16
+2       : Got FINISH
+2       : sent finish
+2: steps 435332950 best result 16
+3       : Got FINISH
+3       : sent finish
+3: steps -1532020989 best result 16
+03      : Elapsed time is 24208.263313
+1       : Elapsed time is 24208.263319
+2       : Elapsed time is 24208.263315
+: Elapsed time is 24208.263319
+
+4p - v2 (lepsi rozdeleni prace) - 24208 - 403 minut (problem je ten ze "dobre" reseni bylo nalezeno pozdeji)

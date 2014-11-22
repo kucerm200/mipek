@@ -1,0 +1,68 @@
+
+====== 0 spadla =======
+
+1       : Got JOB
+0       : Entering recv_result
+0       : Entering recv_end
+0       : recv token
+0       : Entering recv_job
+0       : Entering send_end
+0       : sent token
+0       : Entering send_req
+0       : Entering recv_result
+0       : Entering recv_end
+0       : Entering recv_job
+0       : Entering send_end
+0       : Entering recv_result
+0       : Entering recv_end
+0       : Entering recv_job
+0       : Got JOB
+0       : Exiting communication window
+1       : Exiting communication window
+1       : Entering communication window
+1       : Entering recv_req
+1       : Got REQ
+1       : Entering send_job
+1       : Entering recv_result
+1       : Exiting communication window
+0       : Entering communication window
+0       : Entering recv_req
+[kajafnb:00511] *** Process received signal ***
+[kajafnb:00511] Signal: Segmentation fault (11)
+[kajafnb:00511] Signal code: Invalid permissions (2)
+[kajafnb:00511] Failing at address: 0x7dd200
+1       : Entering communication window
+1       : Entering send_req
+1       : Entering recv_result
+1       : Entering recv_end
+1       : Entering recv_job
+1       : Got JOB
+1       : Exiting communication window
+[kajafnb:00511] [ 0] /lib/x86_64-linux-gnu/libpthread.so.0(+0x10340) [0x7fa8421e0340]
+[kajafnb:00511] [ 1] [0x7dd200]
+[kajafnb:00511] *** End of error message ***
+
+
+
+
+
+
+
+====== 0 spadla =======
+
+0       : Entering recv_job
+0       : Got JOB
+0       : Exiting communication window
+1       : Entering communication window
+1       : Entering recv_req
+1       : Entering recv_result
+1       : Exiting communication window
+0       : Entering communication window
+0       : Entering recv_req
+[kajafnb:00785] *** Process received signal ***
+[kajafnb:00785] Signal: Segmentation fault (11)
+[kajafnb:00785] Signal code: Invalid permissions (2)
+[kajafnb:00785] Failing at address: 0x1f50500
+[kajafnb:00785] [ 0] /lib/x86_64-linux-gnu/libpthread.so.0(+0x10340) [0x7ffe6e074340]
+[kajafnb:00785] [ 1] [0x1f50500]
+[kajafnb:00785] *** End of error message ***
