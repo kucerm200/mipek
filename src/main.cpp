@@ -7,6 +7,10 @@
 #include <fstream>
 #include <unistd.h> // usleep
 
+// omezi prohledanavy prostor pouze na smysluplne vysledky
+// !!! ZABIJAK linearniho zrychleni
+//#define SMART_SEARCH 1
+#define COMWIN_REQ_STEPS 100
 
 #define SPACE -1
 #define INVALID_POSITION 0
@@ -311,8 +315,13 @@ int checkTriangleStatus(Configuration configuration) {
 }
 
 bool canMoves(int moves) {
+#ifdef SMART_SEARCH
     return (moves < result);
-    //return (moves < maxMoves); // HACK aby byl prostor stejne velky
+#endif    
+    
+#ifndef SMART_SEARCH            // HACK aby byl prostor stejne velky
+    return (moves < maxMoves);
+#endif    
 }
 
 Configuration * createConfiguration(Configuration * configuration, char value) {
@@ -648,7 +657,7 @@ void mainProccesLoop() {
             first_run = false;
         }
         
-        if ((programSteps % 100) == 0) {
+        if ((programSteps % COMWIN_REQ_STEPS) == 0) {
             // komunikacni okenko
             comWin(REQ);
         }
