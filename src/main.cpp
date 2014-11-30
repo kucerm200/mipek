@@ -769,7 +769,13 @@ bool loadTriangleFromFile(string filePath) {
 }
 
 void init() {
-    maxMoves = dimension * dimension;
+    //maxMoves = dimension * dimension;
+    //maxMoves = 19; // HACK pro mereni
+    
+    // triangle4 = best 9 = horni mez 19 = 612s
+    // triangle5 = best 16 = horni mez 17 = 1136s
+    // triangle6 = best 14 = horni mez 15 = 436s
+    
     result = maxMoves;
     results_num = 0;
     if (my_rank == 0) {
@@ -784,7 +790,7 @@ void init() {
 
 int main (int argc, char **argv) {
     // Check bad number of parameters
-    if (argc < 3) {
+    if (argc < 4) {
         return 1;
     }
     
@@ -803,8 +809,9 @@ int main (int argc, char **argv) {
     // Store arguments from command line
     // Format is ./a.out 4 triangle4.txt
     // Where 4 is dimension and triangle4.txt is path to file with input data
-    string fileName = argv[2];
+    string fileName = argv[3];
     dimension = stoi(argv[1]);
+    maxMoves = stoi(argv[2]);
     
     // Init default values
     init();
