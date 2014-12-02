@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Debian) (format=pdflatex 2014.6.1)  30 NOV 2014 12:34
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Debian) (format=pdflatex 2014.6.1)  2 DEC 2014 12:53
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -384,57 +384,137 @@ LaTeX Font Info:    External font `cmex10' loaded for size
  [2
 
 ]
+Underfull \hbox (badness 10000) in paragraph at lines 61--64
+
+ []
+
 <pek.png, id=13, 360.59718pt x 189.70876pt>
 File: pek.png Graphic file (type png)
  <use pek.png>
-Package pdftex.def Info: pek.png used on input line 70.
+Package pdftex.def Info: pek.png used on input line 73.
 (pdftex.def)             Requested size: 390.0pt x 205.17766pt.
  [3
 
  <./pek.png>]
-[4] <data4.png, id=20, 481.8pt x 361.35pt>
-File: data4.png Graphic file (type png)
- <use data4.png>
-Package pdftex.def Info: data4.png used on input line 119.
-(pdftex.def)             Requested size: 390.0pt x 292.50995pt.
+Underfull \hbox (badness 10000) in paragraph at lines 90--93
 
-<data5.png, id=21, 481.8pt x 361.35pt>
-File: data5.png Graphic file (type png)
- <use data5.png>
-Package pdftex.def Info: data5.png used on input line 125.
-(pdftex.def)             Requested size: 390.0pt x 292.50995pt.
-
-<data6.png, id=22, 481.8pt x 361.35pt>
-File: data6.png Graphic file (type png)
- <use data6.png>
-Package pdftex.def Info: data6.png used on input line 131.
-(pdftex.def)             Requested size: 390.0pt x 292.50995pt.
- [5 <./data4.png>]
-Overfull \hbox (2.11954pt too wide) in paragraph at lines 161--163
-\OT1/cmr/m/n/12 Celkov^^Se zhod-no-cen^^S^^P se-mestr^^Saln^^S^^P pr^^Sace a zk
-u^^Tsenosti z^^S^^Pskan^^Sych b^^Tehem se-mestru. 
  []
 
-[6 <./data5.png>] [7 <./data6.png>] (./balls.aux) ) 
+
+Underfull \hbox (badness 10000) in paragraph at lines 96--101
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 104--107
+
+ []
+
+[4]
+LaTeX Font Info:    Try loading font information for OMS+cmr on input line 115.
+
+ (/usr/share/texlive/texmf-dist/tex/latex/base/omscmr.fd
+File: omscmr.fd 1999/05/25 v2.5h Standard LaTeX font definitions
+)
+LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <12> not available
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 115.
+
+Underfull \hbox (badness 10000) in paragraph at lines 122--123
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 125--126
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 128--129
+
+ []
+
+[5]
+Overfull \hbox (14.45691pt too wide) in paragraph at lines 133--134
+\OT1/cmr/m/n/12 Zapne dy-na-mick^^Seho zkra-cov^^San^^S^^P pro-hled^^Savan^^Seh
+o pro-storu na z^^Saklad^^Te ji^^Tz zn^^Sam^^Sych
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 156--157
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 161--162
+
+ []
+
+[6] [7] [8] <data4.png, id=39, 481.8pt x 361.35pt>
+File: data4.png Graphic file (type png)
+ <use data4.png>
+Package pdftex.def Info: data4.png used on input line 235.
+(pdftex.def)             Requested size: 390.0pt x 292.50995pt.
+
+<data5.png, id=40, 481.8pt x 361.35pt>
+File: data5.png Graphic file (type png)
+ <use data5.png>
+Package pdftex.def Info: data5.png used on input line 241.
+(pdftex.def)             Requested size: 390.0pt x 292.50995pt.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+<data6.png, id=41, 481.8pt x 361.35pt>
+File: data6.png Graphic file (type png)
+ <use data6.png>
+Package pdftex.def Info: data6.png used on input line 247.
+(pdftex.def)             Requested size: 390.0pt x 292.50995pt.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[9
+
+ <./data4.png>] [10 <./data5.png>] [11 <./data6.png>]
+Underfull \hbox (badness 10000) in paragraph at lines 256--257
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 263--264
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 265--266
+
+ []
+
+[12
+
+] (./balls.aux) ) 
 Here is how much of TeX's memory you used:
- 2234 strings out of 494953
- 29584 string characters out of 6179186
- 91642 words of memory out of 5000000
- 5431 multiletter control sequences out of 15000+600000
- 9108 words of font info for 32 fonts, out of 8000000 for 9000
+ 2251 strings out of 494953
+ 29876 string characters out of 6179186
+ 92644 words of memory out of 5000000
+ 5444 multiletter control sequences out of 15000+600000
+ 9277 words of font info for 33 fonts, out of 8000000 for 9000
  46 hyphenation exceptions out of 8191
- 38i,7n,23p,611b,240s stack positions out of 5000i,500n,10000p,200000b,80000s
-</usr/share/texlive/texmf-di
-st/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/share/texlive/texmf-dist/fon
-ts/type1/public/amsfonts/cm/cmmi12.pfb></usr/share/texlive/texmf-dist/fonts/typ
-e1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist/fonts/type1/publ
-ic/amsfonts/cm/cmr12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsf
-onts/cm/cmr17.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm
-/cmsy10.pfb>
-Output written on balls.pdf (7 pages, 112570 bytes).
+ 38i,7n,23p,632b,240s stack positions out of 5000i,500n,10000p,200000b,80000s
+</usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/
+cmbx12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12
+.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></
+usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/sha
+re/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texl
+ive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/share/texlive/tex
+mf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/share/texlive/texmf-dist/
+fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/share/texlive/texmf-dist/fonts/ty
+pe1/public/amsfonts/cm/cmsy10.pfb></usr/share/texlive/texmf-dist/fonts/type1/pu
+blic/amsfonts/cm/cmtt12.pfb>
+Output written on balls.pdf (12 pages, 154803 bytes).
 PDF statistics:
- 59 PDF objects out of 1000 (max. 8388607)
- 36 compressed objects within 1 object stream
+ 90 PDF objects out of 1000 (max. 8388607)
+ 58 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  21 words of extra memory for PDF output out of 10000 (max. 10000000)
 

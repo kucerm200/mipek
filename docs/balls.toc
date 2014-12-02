@@ -7,7 +7,23 @@
 \contentsline {subsubsection}{\numberline {1.1.4}V\IeC {\'y}stup algoritmu}{4}
 \contentsline {subsubsection}{\numberline {1.1.5}Sekven\IeC {\v c}n\IeC {\'\i } algoritmus}{4}
 \contentsline {subsubsection}{\numberline {1.1.6}Paraleln\IeC {\'\i } algoritmus}{4}
-\contentsline {section}{\numberline {2}Popis paraleln\IeC {\'\i }ho algoritmu a jeho implementace v MPI}{4}
-\contentsline {section}{\numberline {3}Nam\IeC {\v e}\IeC {\v r}en\IeC {\'e} v\IeC {\'y}sledky a vyhodnocen\IeC {\'\i }}{5}
-\contentsline {section}{\numberline {4}Z\IeC {\'a}v\IeC {\v e}r}{6}
-\contentsline {section}{\numberline {5}Literatura}{7}
+\contentsline {section}{\numberline {2}Popis paraleln\IeC {\'\i }ho algoritmu a jeho implementace v MPI}{5}
+\contentsline {subsection}{\numberline {2.1}Odli\IeC {\v s}nost od sekven\IeC {\v c}n\IeC {\'\i }ho algoritmu}{5}
+\contentsline {subsection}{\numberline {2.2}Sm\IeC {\v e}r komunikace}{5}
+\contentsline {subsection}{\numberline {2.3}Pr\IeC {\'a}ce se z\IeC {\'a}sobn\IeC {\'\i }kem}{5}
+\contentsline {subsection}{\numberline {2.4}Ukon\IeC {\v c}en\IeC {\'\i } v\IeC {\'y}po\IeC {\v c}tu}{5}
+\contentsline {subsection}{\numberline {2.5}Parametry algoritmu}{6}
+\contentsline {subsection}{\numberline {2.6}Spou\IeC {\v s}t\IeC {\v e}n\IeC {\'\i }}{6}
+\contentsline {section}{\numberline {3}Nam\IeC {\v e}\IeC {\v r}en\IeC {\'e} v\IeC {\'y}sledky a vyhodnocen\IeC {\'\i }}{6}
+\contentsline {subsection}{\numberline {3.1}Ethernet vs. Infiniband}{6}
+\contentsline {subsection}{\numberline {3.2}Konfigurace m\IeC {\v e}\IeC {\v r}en\IeC {\'\i }}{6}
+\contentsline {subsubsection}{\numberline {3.2.1}Spou\IeC {\v s}t\IeC {\v e}n\IeC {\'\i }}{6}
+\contentsline {subsubsection}{\numberline {3.2.2}Konfigurace dimenze a horn\IeC {\'\i } mez}{7}
+\contentsline {subsubsection}{\numberline {3.2.3}Datov\IeC {\'e} soubory}{7}
+\contentsline {paragraph}{Soubor: triangle4}{7}
+\contentsline {paragraph}{Soubor: triangle5}{7}
+\contentsline {paragraph}{Soubor: triangle6}{7}
+\contentsline {subsection}{\numberline {3.3}Tabulka s v\IeC {\'y}sledky}{8}
+\contentsline {subsection}{\numberline {3.4}Grafy}{9}
+\contentsline {subsection}{\numberline {3.5}Vyhodnocen\IeC {\'\i }}{12}
+\contentsline {section}{\numberline {4}Z\IeC {\'a}v\IeC {\v e}r}{12}
